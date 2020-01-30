@@ -6,9 +6,9 @@
 #' @usage listOvelapPermtest( Alist, Blist, sampling=FALSE, fraction=0.15,
 #' ranFun="randomizeRegions", ...)
 #'
-#' @param Alist list of Region Set of any accepted formats by  regionerR package
+#' @param Alist list of Region Set of any accepted formats by  \code{\link{regioneR}} package
 #' (\code{\link{GenomicRanges}}, \code{\link{data.frame}} etc...)
-#' @param Blist list of Region Set of any accepted formats by  regionerR package
+#' @param Blist list of Region Set of any accepted formats by \code{\link{regioneR}} package
 #' (\code{\link{GenomicRanges}}, \code{\link{data.frame}} etc...)
 #' @param sampling boolean if is true the function will use only a sample of
 #' each element of Alist to perform the test
@@ -21,7 +21,7 @@
 #' @param ...  further arguments to be passed to other methods.
 #'
 #' @details  the permutation test core used in this function permit to change
-#' \code{"randomize.function"} (\code{\link{randomizeRegions}},
+#' \code{"randomize.function"} \code{\link{randomizeRegions}},
 #' \code{\link{circularRandomizeRegions}}, \code{\link{resampleRegions}} or a
 #' custom function), but use only an \code{"evaluation.function"}
 #' \code{\link{numOverlaps}}
