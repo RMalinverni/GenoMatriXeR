@@ -34,7 +34,7 @@
 #' @export listOverlapPermTest
 
 listOverlapPermTest<-function(Alist,Blist,sampling=FALSE,fraction=0.15,
-                              ranFun="randomize",universe=NULL,mc.cores=2,...){
+                              ranFun="randomizeRegions",universe=NULL,mc.cores=2,...){
   list.tabs<-list()
   list.pt<-list()
   for ( i in 1:length(Alist)){

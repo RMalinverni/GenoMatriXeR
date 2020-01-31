@@ -7,11 +7,15 @@
 #'
 #' @param A test Region Set
 #'
-#' @param Blist test REgion Set List
+#' @param Blist test Region Set List
 #' @param ranFun c("randomizeRegions","circularRandomizeRegions",
 #' "resampleRegions") choose the randomization strategy used for the test
 #' @param universe (default = NULL) using only when resamplinRegions function is
 #' selected
+#' @param sampling boolean if is true the function will use only a sample of
+#' each element of Alist to perform the test
+#' @param fraction numeric, if sampling==TRUE is the fraction of the region sets
+#' used to perform the test
 #' @param window (default 2000) window associated to \code{\link{localZScore}}
 #' function
 #' @param step (default 100) step associated to \code{\link{localZScore}}
@@ -24,8 +28,13 @@
 #'
 #' @export lZAssociations
 #'
-lZAssociations <- function(A, Blist,ranFun="randomizeRegions",
-                               universe=NULL,window=2000,step=100,...){
+lZAssociations <- function(A, Blist,ranFun="randomizeRegions",sampling=FALSE,
+                           fraction=0.15, universe=NULL,window=2000,step=100,...){
+  
+  if(sampling==TRUE){
+    A<-A[sample(length(A),round(length(A)*fraction))] #controllare se è vero
+  }
+  
   function.list <- createFunctionsList(FUN = numOverlaps, param.name = "B", values = Blist)
 
   if(ranFun=="randomizeRegions"){
@@ -60,5 +69,5 @@ lZAssociations <- function(A, Blist,ranFun="randomizeRegions",
     lZs[[i]] <- localZScore(A = A,  pt = pts[[i]], window = window, step = step)
     names(lZs)[i]<-names(pts[i])
   }
-  return (list(p_valuses=pts,local_zscores=lZs))
+  return (list(p_values=pts,local_zscores=lZs))
 }
