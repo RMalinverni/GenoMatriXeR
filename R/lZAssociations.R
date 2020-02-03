@@ -64,6 +64,7 @@ lZAssociations <- function(A, Blist,ranFun="randomizeRegions",sampling=FALSE,
 
   }
 
+
   lZs <- list()
   for(i in 1:length(pts)){
     lZs[[i]] <- localZScore(A = A,  pt = pts[[i]], window = window, step = step)
