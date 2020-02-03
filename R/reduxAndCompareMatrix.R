@@ -21,11 +21,14 @@
 #' #@importFrom ...
 #' @export reduxAndCompareMatrix
 #'
+#'
+
+# Ricontrollare la funzion con dati reali
 reduxAndCompareMatrix<-function(mat.A,mat.B,nameA="",nameB="",mirrored=FALSE,
                                 method="complete",...){
 
-  colnames(mat.A)<-names.A<-sub(".*-", "", colnames(mat.A))
-  colnames(mat.B)<-names.B<-sub(".*-", "", colnames(mat.B))
+  #colnames(mat.A)<-names.A<-sub(".*-", "", colnames(mat.A))
+  #colnames(mat.B)<-names.B<-sub(".*-", "", colnames(mat.B)
   rownames(mat.A)<-sub(".*-", "",rownames(mat.A))
   rownames(mat.B)<-sub(".*-", "",rownames(mat.B))
 
@@ -51,3 +54,4 @@ reduxAndCompareMatrix<-function(mat.A,mat.B,nameA="",nameB="",mirrored=FALSE,
   return(mat.tot)
 
 }
+
