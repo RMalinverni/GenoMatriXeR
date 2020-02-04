@@ -1,5 +1,7 @@
 library(regioneR)
 library(AnnotationHub)
+library(lattice)
+source("")
 load("/home/malli/work/data/regionSets/HepG2_list.BroadPeak.RData")
 HM_peaks_HepG2<-CellPeakList
 load("/home/malli/work/data/regionSets/K562_list.BroadPeak.RData")
@@ -34,7 +36,7 @@ mat_HepG2<-matListOverlap(lovPT_HepG2)
 mat_HepG2<-clustMatrix(mat_HepG2)
 plotMatrix(mat_HepG2)
 
-llzPT_HepG2<-lZAssociations(A=list_HepG2_CS$`7_Enh`,
+llzPT_HepG2<-lZAssociations(A=list_HepG2_CS$`7_Enh`,sampling = TRUE,
                       Blist=CellPeakList,
                       window=10000,
                       step=500)
@@ -51,8 +53,11 @@ mat_K562<-matListOverlap(lovPT_K562)
 mat_K562<-clustMatrix(mat_K562)
 plotMatrix(mat_K562)
 
-llzPT_K562<-lZAssociations(A=list_K562_CS$`7_Enh`,
-                            Blist=CellPeakList,
+llzPT_K562<-lZAssociations(A=HM_peaks_HepG2$`E118-H3K4me3.broadPeak.gz`,
+                            Blist=list_K562_CS,
+                            sampling=TRUE,
+                            per.chromosome=TRUE,
+                            fraction = 0.1,
                             window=10000,
                             step=500)
 
@@ -61,58 +66,39 @@ lzmat_K562<-clustMatrix(lzmat_K562,lZ_tab = TRUE)
 plotLZMatrix(lzmat_K562)
 
 
-lzmat<-lzmat_HepG2
-plot(lzmat[,1],type="n",ylim=c(min(lzmat),max(lzmat)),xlim=c(1,ncol(lzmat)))
-for(i in 1:nrow(lzmat)){
-  lines(lzmat[i,])
-}
+
 library(ggplot2)
+lzmat<-lzmat_K562
 
 
+#ind<-order(as.numeric(apply(lzmat[,"0"],1,FUN=max)))
+ind<-order(rowMeans(lzmat[,"0"]))
+lzmat<-lzmat[ind,]
+rownames(lzmat)<-paste0(1:nrow(lzmat),"_",rownames(lzmat))
 
-df<-data.frame(X=as.numeric(colnames(lzmat_K562)),
-               Y=lzmat_K562[1,])
-
-
-
-
-
-p <- ggplot(data=df, aes(x=X, y=Y)) + 
-      geom_area(fill = "lightblue") +
-      geom_line(color = "blue") 
-
-time <- as.numeric(rep(seq(1,7),each=7))  # x Axis
-value <- runif(49, 10, 100)               # y Axis
-group <- rep(LETTERS[1:7],times=7)        # group, one shape per group
-data <- data.frame(time, value, group)
-
-values<-as.vector(lzmat_K562)
-names<-rep(rownames(lzmat_K562),ncol(lzmat_K562))
+values<-as.vector(lzmat)
+names<-rep(rownames(lzmat),ncol(lzmat))
 steps<-vector()
-for(i in 1:ncol(lzmat_K562)){
-  a<-rep(colnames(lzmat_K562)[i],nrow(lzmat_K562))
+for(i in 1:ncol(lzmat)){
+  a<-rep(colnames(lzmat)[i],nrow(lzmat))
   steps<-c(steps,a)
   }
-steps<-rep(colnames(lzmat_K562),nrow(lzmat_K562))
+
 
 df<-data.frame(names=names,steps=steps,values=values)
-p<-ggplot(df, aes(x=steps, y=values)) + 
-  geom_area(aes(fill = names)) 
-
-p<-ggplot(df, aes(x=steps, y=values,group=names)) + 
-  geom_line() 
-
-df[seq(1,100,by=12),]
-
-
+df$steps<-as.numeric(as.character(df$steps))
+lll<-length(unique(df$names))
+changed<-seq(-(lll/2),lll/2,by=1)
+for(i in 1:length(unique(df$names))){
+  ndf<-as.character(unique(df$names)[i])
+  df$steps[df$names==ndf]<-df$steps[df$names==ndf]+changed[i]
+}
 
 
-as.vector(lzmat_K562)
-df<-as.data.frame(lzmat_K562)
-p<-ggplot(df,aes(x=as.numeric(colnames(df)), y='E123-H3K4me1.broadPeak.gz')) +
-  geom_area()
+p<-ggplot(df, aes(x=as.numeric(as.character(df$steps)), y=values,group=names)) + 
+  geom_area(color="white",fill="black",alpha=0.9) +
+  coord_cartesian(xlim=c(-5000,5000))
 
-# stacked area chart
-ggplot(data, aes(x=time, y=value, fill=group)) + 
-  geom_area()
+p
+
 
