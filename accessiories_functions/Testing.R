@@ -1,6 +1,8 @@
 library(regioneR)
 library(AnnotationHub)
 library(lattice)
+library(forcats)
+library(RColorBrewer) 
 source("")
 load("/home/malli/work/data/regionSets/HepG2_list.BroadPeak.RData")
 HM_peaks_HepG2<-CellPeakList
@@ -68,14 +70,14 @@ plotLZMatrix(lzmat_K562)
 
 
 library(ggplot2)
+
 lzmat<-lzmat_K562
-
-
 #ind<-order(as.numeric(apply(lzmat[,"0"],1,FUN=max)))
-ind<-order(rowMeans(lzmat[,"0"]))
-lzmat<-lzmat[ind,]
-rownames(lzmat)<-paste0(1:nrow(lzmat),"_",rownames(lzmat))
-
+ind<-order(lzmat[,"0"])
+lzmat<-lzmat[rev(ind),]
+rownames(lzmat)<-paste0(letters[1:nrow(lzmat)],"_",rownames(lzmat))
+rownames(lzmat)<-factor(rownames(lzmat), levels = rownames(lzmat)[order(rownames(lzmat))])
+rownames(lzmat)<-as.factor(rownames(lzmat))
 values<-as.vector(lzmat)
 names<-rep(rownames(lzmat),ncol(lzmat))
 steps<-vector()
@@ -88,17 +90,23 @@ for(i in 1:ncol(lzmat)){
 df<-data.frame(names=names,steps=steps,values=values)
 df$steps<-as.numeric(as.character(df$steps))
 lll<-length(unique(df$names))
-changed<-seq(-(lll/2),lll/2,by=1)
+changed<-seq(-(lll/2),lll/2,by=1)*300
 for(i in 1:length(unique(df$names))){
   ndf<-as.character(unique(df$names)[i])
   df$steps[df$names==ndf]<-df$steps[df$names==ndf]+changed[i]
 }
 
+#with(df,reorder(names,values,mean))
 
-p<-ggplot(df, aes(x=as.numeric(as.character(df$steps)), y=values,group=names)) + 
+p<-ggplot(df, aes(x=as.numeric(as.character(df$steps)), y=values,group=as.factor(names))) + 
   geom_area(color="white",fill="black",alpha=0.9) +
   coord_cartesian(xlim=c(-5000,5000))
 
 p
 
-
+p<-ggplot(df, aes(x=as.numeric(as.character(df$steps)), 
+                  y=values,fill=names,group=as.factor(names))) + 
+  geom_area(color="white") +
+  scale_fill_brewer(palette="Spectral") +
+  coord_cartesian(xlim=c(-5000,5000)) +
+  scale_alpha("cylinders")
