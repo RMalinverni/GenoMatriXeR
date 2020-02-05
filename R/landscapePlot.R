@@ -19,14 +19,15 @@
 #'
 #' @examples  ...
 #'
-#' @export lZAssociations
+#' @export landscapePlot
 #'
 
 
 
 landscapePlot<-function(lzmat,rotation=1,
                         palette_vec=c("brown","darkgreen","lightgreen","yellow","lightblue"),
-                        theme_vec=c("lightblue","black","lightblue","white")){  
+                        theme_vec=c("lightblue","black","lightblue","white"),
+                        xlab="",ylab="",title="",subtitle=""){  
   
   ind<-order(lzmat[,"0"])
   lzmat<-lzmat[rev(ind),]
@@ -65,7 +66,11 @@ landscapePlot<-function(lzmat,rotation=1,
           panel.grid.minor = element_line(size = 0.25, 
                                           linetype = 'solid',
                                           colour = theme_vec[4])
-    )
+    )+
+  ylim(min(lzmat),max(lzmat)+(max(lzmat)*1)) +  
+  xlab(xlab) +
+  ylab(ylab) +
+  ggtitle(title, subtitle =subtitle)
   
   p
 }
