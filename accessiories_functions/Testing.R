@@ -3,7 +3,8 @@ library(AnnotationHub)
 library(lattice)
 library(forcats)
 library(RColorBrewer) 
-source("")
+library(miceadds)
+source.all("/home/malli/GenoMatriXeR/R/*.R")
 load("/home/malli/work/data/regionSets/HepG2_list.BroadPeak.RData")
 HM_peaks_HepG2<-CellPeakList
 load("/home/malli/work/data/regionSets/K562_list.BroadPeak.RData")
@@ -68,10 +69,23 @@ lzmat_K562<-clustMatrix(lzmat_K562,lZ_tab = TRUE)
 plotLZMatrix(lzmat_K562)
 
 
-
+lzmat<-lzmat_HepG2
+rotation<-300
+my_palette<-colorRampPalette(palette_vec)
 library(ggplot2)
 
-lzmat<-lzmat_K562
+
+landscapePlot(lzmat=lzmat_HepG2,rotation=-300)
+
+landscapePlot<-function(lzmat,rotation=0,
+                        palette_vec=c("brown","darkgreen","lightgreen","yellow","lightblue"),
+                        theme_vec=c("lightblue","black","lightblue","white")){  
+
+
+
+
+
+
 #ind<-order(as.numeric(apply(lzmat[,"0"],1,FUN=max)))
 ind<-order(lzmat[,"0"])
 lzmat<-lzmat[rev(ind),]
@@ -90,23 +104,32 @@ for(i in 1:ncol(lzmat)){
 df<-data.frame(names=names,steps=steps,values=values)
 df$steps<-as.numeric(as.character(df$steps))
 lll<-length(unique(df$names))
-changed<-seq(-(lll/2),lll/2,by=1)*300
+changed<-seq(-(lll/2),lll/2,by=1)*rotation
 for(i in 1:length(unique(df$names))){
   ndf<-as.character(unique(df$names)[i])
   df$steps[df$names==ndf]<-df$steps[df$names==ndf]+changed[i]
 }
 
-#with(df,reorder(names,values,mean))
 
-p<-ggplot(df, aes(x=as.numeric(as.character(df$steps)), y=values,group=as.factor(names))) + 
-  geom_area(color="white",fill="black",alpha=0.9) +
-  coord_cartesian(xlim=c(-5000,5000))
-
-p
 
 p<-ggplot(df, aes(x=as.numeric(as.character(df$steps)), 
-                  y=values,fill=names,group=as.factor(names))) + 
-  geom_area(color="white") +
-  scale_fill_brewer(palette="Spectral") +
-  coord_cartesian(xlim=c(-5000,5000)) +
-  scale_alpha("cylinders")
+          y=values,fill=names,group=as.factor(names))) + 
+          geom_area(color="white") +
+          coord_cartesian(xlim=c(-5000,5000)) +
+          scale_fill_manual(values=my_palette(nlevels(as.factor(names))))+
+          theme(panel.background = element_rect(fill = theme_vec[1],
+                                                colour = theme_vec[2],
+                                                size = 0.5, 
+                                                linetype = "solid"),
+                panel.grid.major = element_line(size = 0.5, 
+                                                linetype = 'solid', 
+                                                colour = theme_vec[3]), 
+                panel.grid.minor = element_line(size = 0.25, 
+                                                linetype = 'solid',
+                                                colour = theme_vec[4])
+          )
+
+p
+}
+
+#scale_fill_brewer(palette="Spectral") +
