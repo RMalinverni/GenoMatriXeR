@@ -1,4 +1,30 @@
-landscapePlot<-function(lzmat,rotation=0,
+#' landscapePlot
+#'
+#' draw a plot for multiple associations starting from a matrix of local z-scare multi associations 
+#'
+#' @usage landscapePlot<-function(lzmat,rotation=1,
+#'          palette_vec=c("brown","darkgreen","lightgreen","yellow","lightblue"),
+#'          theme_vec=c("lightblue","black","lightblue","white"))
+#' 
+#'
+#' @param lzmat matrix of mutiple local z-scare associations
+#'
+#' @param rotation sliding of the central axis (in base pairs)
+#' @param palette_vec (default = c("brown","darkgreen","lightgreen","yellow","lightblue"))is a colorRampPaette or the color of the landscape
+#' 
+#' @param theme_vec (default = c("lightblue","black","lightblue","white"))palette for the background elements of the plot
+#' 
+#'
+#' @seealso \code{\link{localZScore}} \code{\link{regioneR}}
+#'
+#' @examples  ...
+#'
+#' @export lZAssociations
+#'
+
+
+
+landscapePlot<-function(lzmat,rotation=1,
                         palette_vec=c("brown","darkgreen","lightgreen","yellow","lightblue"),
                         theme_vec=c("lightblue","black","lightblue","white")){  
   
