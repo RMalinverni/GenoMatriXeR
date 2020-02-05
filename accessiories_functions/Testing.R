@@ -8,9 +8,11 @@ source.all("/home/malli/GenoMatriXeR/R/*.R")
 load("/home/malli/work/data/regionSets/HepG2_list.BroadPeak.RData")
 HM_peaks_HepG2<-CellPeakList
 load("/home/malli/work/data/regionSets/K562_list.BroadPeak.RData")
-HM_peaks_K562<-CellPeakList
+HM_peaks_K562<-GRangesList(CellPeakList)
 load("/home/malli/work/data/regionSets/HepG2_CS.RData")
 load("/home/malli/work/data/regionSets/K562_CS.RData")
+
+a<-GRangesList(HM_peaks_K562)
 
 
 list_HepG2_CS<-list()
@@ -49,8 +51,9 @@ lzmat_HepG2<-clustMatrix(lzmat_HepG2,lZ_tab = TRUE)
 ####################Calculate matrix (pt and lz for K562)
 
 lovPT_K562<-listOverlapPermTest(Alist = list_K562_CS,
-                                Blist = CellPeakList,
-                                sampling=TRUE)
+                                Blist = HM_peaks_K562,
+                                sampling=TRUE,
+                                fraction = 0.1)
 
 mat_K562<-matListOverlap(lovPT_K562)
 mat_K562<-clustMatrix(mat_K562)
@@ -137,4 +140,6 @@ landscapePlot<-function(lzmat,rotation=200,
   p
 }
 
-#scale_fill_brewer(palette="Spectral") +
+dim(mcols(a))
+cor(mcols(a[,6])[[1]],mcols(a[,2])[[1]])
+
