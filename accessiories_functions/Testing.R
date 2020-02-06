@@ -4,14 +4,21 @@ library(lattice)
 library(forcats)
 library(RColorBrewer) 
 library(miceadds)
-source.all("/home/malli/GenoMatriXeR/R/*.R")
+library(corrplot)
+
+source("http://www.sthda.com/upload/rquery_cormat.r")
+
+setwd("/home/malli/GenoMatriXeR/R")
+a<-list.files()
+for(i in a){source(i)}
+
 load("/home/malli/work/data/regionSets/HepG2_list.BroadPeak.RData")
 HM_peaks_HepG2<-CellPeakList
 load("/home/malli/work/data/regionSets/K562_list.BroadPeak.RData")
 HM_peaks_K562<-GRangesList(CellPeakList)
 load("/home/malli/work/data/regionSets/HepG2_CS.RData")
 load("/home/malli/work/data/regionSets/K562_CS.RData")
-
+load("/home/malli/work/GenoMatrixeR_package/RData/listTF_K562.ENCODE.RData")
 a<-GRangesList(HM_peaks_K562)
 
 
@@ -50,14 +57,15 @@ lzmat_HepG2<-matLZAssociations(llzPT_HepG2)
 lzmat_HepG2<-clustMatrix(lzmat_HepG2,lZ_tab = TRUE)
 ####################Calculate matrix (pt and lz for K562)
 
-lovPT_K562<-listOverlapPermTest(Alist = list_K562_CS,
-                                Blist = HM_peaks_K562,
+lovPT_K562<-listOverlapPermTest(Alist = c(list_K562_CS,as.list(HM_peaks_K562)),
+                                Blist = c(list_K562_CS,as.list(HM_peaks_K562)),
                                 sampling=TRUE,
-                                fraction = 0.1)
+                                ranFun = "circularRandomizeRegions",
+                                fraction = 0.2)
 
-mat_K562<-matListOverlap(lovPT_K562)
-mat_K562<-clustMatrix(mat_K562)
-plotMatrix(mat_K562)
+mat_K562<-matListOverlap(lovPT_K562,zs.type = "norm")
+mat_K562<-clustMatrix(mat_K562,mirrored = T)
+plotMatrix(mat_K562,type="normal")
 
 llzPT_K562<-lZAssociations(A=HM_peaks_HepG2$`E118-H3K4me3.broadPeak.gz`,
                             Blist=list_K562_CS,
@@ -139,6 +147,13 @@ landscapePlot<-function(lzmat,rotation=200,
   
   p
 }
+
+
+tB<-listRGBinTable(c(list_K562_CS,as.list(HM_peaks_K562)))
+rquery.cormat(as.matrix((mcols(tB))),graphType="heatmap")
+
+source("http://www.sthda.com/upload/rquery_cormat.r")
+
 
 dim(mcols(a))
 cor(mcols(a[,6])[[1]],mcols(a[,2])[[1]])

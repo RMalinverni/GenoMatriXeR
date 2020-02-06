@@ -31,8 +31,10 @@ plotMatrix<-function(mat,palette="bwr",type="normal",cexX=1,cexY=1,name="",...){
   }
   trellis.par.set(regions=list(col=rgb.palette(100)))
   if (type=="normal"){
-    mat[mat>1]<-0.99
-    mat[mat<(-1)]<-(-0.99)
+    lim<-mean(mat)+(1*sd(mat))
+    mat[mat>lim]<-lim
+    mat[mat<(-lim)]<-(-lim)
+    atx<-seq((-lim-0.1),lim+0.1,length.out=100)
     pl<-levelplot(mat,at=atx, scales=list(x=list(rot=45,cex=cexX),y=list(cex=cexY)),main=name)
   }
   if (type=="compare"){
