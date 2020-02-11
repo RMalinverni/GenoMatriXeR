@@ -27,8 +27,9 @@
 landscapePlot<-function(lzmat,rotation=1,
                         palette_vec=c("brown","darkgreen","lightgreen","yellow","lightblue"),
                         theme_vec=c("lightblue","black","lightblue","white"),
-                        xlab="",ylab="",title="",subtitle=""){  
+                        xlab="",ylab="",title="",subtitle="",lim=c(-5e3,5e3)){  
   
+  my_palette<-colorRampPalette(palette_vec)
   ind<-order(lzmat[,"0"])
   lzmat<-lzmat[rev(ind),]
   rownames(lzmat)<-paste0(letters[1:nrow(lzmat)],"_",rownames(lzmat))
@@ -54,7 +55,7 @@ landscapePlot<-function(lzmat,rotation=1,
   p<-ggplot(df, aes(x=as.numeric(as.character(df$steps)), 
                     y=values,fill=names,group=as.factor(names))) + 
     geom_area(color="white") +
-    coord_cartesian(xlim=c(-5000,5000)) +
+    coord_cartesian(xlim=c(lim[1],lim[2])) +
     scale_fill_manual(values=my_palette(nlevels(as.factor(names))))+
     theme(panel.background = element_rect(fill = theme_vec[1],
                                           colour = theme_vec[2],
