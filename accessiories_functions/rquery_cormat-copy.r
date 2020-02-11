@@ -5,7 +5,7 @@
 # http://www.sthda.com/upload/rquery_cormat.r
 # x : matrix
 # type: possible values are "lower" (default), "upper", "full" or "flatten";
-  #display lower or upper triangular of the matrix, full  or flatten matrix.
+#display lower or upper triangular of the matrix, full  or flatten matrix.
 # graph : if TRUE, a correlogram or heatmap is plotted
 # graphType : possible values are "correlogram" or "heatmap"
 # col: colors to use for the correlogram
@@ -101,3 +101,4 @@ rquery.cormat<-function(x, type=c('lower', 'upper', 'full', 'flatten'),
   }
   list(r=cormat, p=pmat, sym=sym)
 }
+

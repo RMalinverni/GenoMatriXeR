@@ -15,7 +15,7 @@
 #' #@importFrom ...
 #' @export matLZAssociations
 #'
-matLZAssociations <- function(lZobj,A=NULL,...){
+matLZAssociations <- function(lZobj,A=NULL,norm=TRUE,...){
   lZs<-lZobj$local_zscores
   tab<-vector()
   coln<-seq(from = 0-lZs[[1]]$window, to=0+lZs[[1]]$window,by=lZs[[1]]$step)
@@ -25,8 +25,11 @@ matLZAssociations <- function(lZobj,A=NULL,...){
   rownames(tab)<-names(lZs)
   colnames(tab)<-coln
   mat<-as.matrix(tab)
-  if (!is.null(A)){
-    mat<-mat/sqrt(length(toGRanges(A)))
+  # if (!is.null(A)){
+  #   mat<-mat/sqrt(length(toGRanges(A)))
+  # }
+  if(norm==TRUE){
+    mat<-mat/sqrt(lZobj$Nreg)
   }
   return(mat)
 }

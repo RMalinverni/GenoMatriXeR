@@ -30,7 +30,7 @@
 #'
 lZAssociations <- function(A, Blist,ranFun="randomizeRegions",sampling=FALSE,
                            fraction=0.15, universe=NULL,window=2000,step=100,...){
-  
+  A<-toGRanges(A)
   if(sampling==TRUE){
     A<-A[sample(length(A),round(length(A)*fraction))] #controllare se è vero
   }
@@ -70,5 +70,5 @@ lZAssociations <- function(A, Blist,ranFun="randomizeRegions",sampling=FALSE,
     lZs[[i]] <- localZScore(A = A,  pt = pts[[i]], window = window, step = step)
     names(lZs)[i]<-names(pts[i])
   }
-  return (list(p_values=pts,local_zscores=lZs))
+  return (list(Nreg=length(A),p_values=pts,local_zscores=lZs))
 }
