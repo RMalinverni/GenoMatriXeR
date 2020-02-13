@@ -33,6 +33,8 @@
 #'
 #' @export listOverlapPermTest
 
+
+
 listOverlapPermTest<-function(Alist,Blist,sampling=FALSE,fraction=0.15,
                               ranFun="randomizeRegions",universe=NULL,mc.cores=2,...){
   list.tabs<-list()
@@ -82,7 +84,7 @@ listOverlapPermTest<-function(Alist,Blist,sampling=FALSE,fraction=0.15,
     print(paste0(" run in ",time,"  minute"))
     tab<-data.frame()
     for (j in 1:length(pt)){
-      if(pt[[j]]$zscore==0){
+      if(pt[[j]]$zscore==0 | is.na(pt[[j]]$zscore) | is.nan((pt[[j]]$zscore))){ # modifica per non andare in errore
         zscore.norm<-0
         max.val<-0
         max.z<-0
