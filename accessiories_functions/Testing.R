@@ -120,6 +120,8 @@ TF_HepG2_peaks<-cleanNames(TF_HepG2_peaks,"Hepg2")
 mat<-matListOverlap(PTList_HepG2)
 mat<-clustMatrix(mat,mirrored=TRUE)
 
+
+
 corrplot(mat, tl.col="black", 
          tl.srt=45,is.corr = F,
          col=rev(paletteMatrix(50)),
@@ -163,13 +165,14 @@ stZscore<-normZS/normZSmax
 ANzscore=pt$numOverlaps$zscore/sqrt(length(ind))
 
 ind<-sample(length(A),round(length(A)*0.10))
-A=TF_HepG2_peaks$`10-Foxa1`
+A=TF_HepG2_peaks$`58-Mxi1`
 B=TF_HepG2_peaks$`41-Brca1a300`
+
 testAssociations<-function(A,B,
                            seqFraction=seq(0.1,1,0.1),
-                           ntimes=100){
+                           ntimes=25){
 
-  vecZs<-vecNZs<-vecSZs<-vecOE<-vecP<-vecPV<-vector()
+  vecZs<-vecNZs<-vecSZs<-vecNZs1<-vecSZs1<-vecOE<-vecP<-vecPV<-vector()
   for(i in seq(0.1,1,0.1)){
     ind<-sample(length(A),round(length(A)*i))
     print(length(ind))
@@ -178,18 +181,28 @@ testAssociations<-function(A,B,
                  B=B,
                  randomize.function = randomizeRegions,
                  evaluate.function = numOverlaps,
-                 ntimes=200,
+                 ntimes=ntimes,
+                 mc.cores=4,
                  count.once=TRUE)
     orig.ev<-pt$numOverlaps$observed
     rand.ev<-pt$numOverlaps$permuted
     zscore <- round((orig.ev - mean(rand.ev, na.rm = TRUE))/stats::sd(rand.ev,na.rm = TRUE), 4)
     maxZscore <- round((length(A1) - mean(rand.ev, na.rm = TRUE))/stats::sd(rand.ev,na.rm = TRUE), 4)
-    normZS<-zscore/sqrt(min(length(A1),length(B)))
-    normZSmax<-maxZscore/sqrt(min(length(A1),length(B)))
+    normZS<-zscore/sqrt(length(A1))
+    normZSmax<-maxZscore/sqrt(length(A1))
     stZscore<-normZS/normZSmax
+    
+    maxZscore1 <- round((min(length(A1),length(B)) - mean(rand.ev, na.rm = TRUE))/stats::sd(rand.ev,na.rm = TRUE), 4)
+    normZS1<-zscore/sqrt(min(length(A1),length(B)))
+    normZSmax1<-maxZscore/sqrt(min(length(A1),length(B)))
+    stZscore1<-normZS1/normZSmax1
+    
     vecZs<-c(vecZs,zscore)
     vecNZs<-c(vecNZs,normZS)
     vecSZs<-c(vecSZs,stZscore)
+    vecNZs1<-c(vecNZs1,normZS1)
+    vecSZs1<-c(vecSZs1,stZscore1)
+
     vecOE<-c(vecOE,orig.ev)
     vecPV<-c(vecPV,pt$numOverlaps$pval)
     vecP<-c(vecP,mean(rand.ev, na.rm = TRUE))
@@ -200,27 +213,101 @@ testAssociations<-function(A,B,
                 zcore=round(vecZs,digits = 2),
                 p_value=vecPV,
                 norm_zscore=round(vecNZs,digits = 2),
+                norm_zscore1=round(vecNZs1,digits = 2),
                 stZscore=round(vecSZs,digits = 2),
+                stZscore1=round(vecSZs1,digits = 2),
                 n_ov=vecOE,
                 menPerm_ov=round(vecP,digits = 2))
   return(DF)
 }
 
-A=TF_HepG2_peaks$`10-Foxa1`
+A=TF_HepG2_peaks$`58-Mxi1`
 B=TF_HepG2_peaks$`41-Brca1a300`
-DF_1<-testAssociations(A=A[ind],B=B)
-DF_2<-testAssociations(A=B,B=A[ind])
+C=TF_HepG2_peaks$`74-Cmyc`
+DF_1<-testAssociations(A=A,B=B,ntimes = 200)
+DF_X<-testAssociations(A=B,B=B,ntimes = 200)
+
+
+hist(width(A))
+
+
+
+
+DF_2<-testAssociations(A=B,B=A)
+DF_3<-testAssociations(A=A,B=C)
+DF_4<-testAssociations(A=C,B=A)
+
+
+
+A=TF_HepG2_peaks$`58-Mxi1`
+B=TF_HepG2_peaks$`41-Brca1a300`
+pt<-permTest(A=A,
+             B=B,
+             randomize.function = circularRandomizeRegions,
+             evaluate.function = numOverlaps,
+             ntimes=ntimes,
+             mc.cores=4,
+             count.once=TRUE)
+
+
+
+
+
 plot(DF_1$Nreg,DF_1$zcore,type="l")
 lines(DF_1$Nreg,DF_2$zcore,col="red")
+plot(DF_3$Nreg,DF_3$zcore,type="l")
+lines(DF_3$Nreg,DF_4$zcore,col="red")
+
+plot(DF_1$Nreg,DF_1$norm_zscore,type="l")
+lines(DF_1$Nreg,DF_2$zcore,col="red")
+
 plot(DF_1$Nreg,DF_1$n_ov,type="l")
 lines(DF_1$Nreg,DF_1$zcore,col="red")
 plot(DF$Nreg,DF$norm_zscore,type="l")
 plot(DF$Nreg,DF$stZscore,type="l",ylim=c(-1,1))
 plot(DF$Nreg,DF$n_ov,type="l")
 
+samp20<-sample(77,20)
+lOpT<-listOverlapPermTest2(Alist = TF_HepG2_peaks[samp20],
+                          Blist = TF_HepG2_peaks[samp20],
+                          sampling = T,
+                          ranFun = "randomizeRegions",
+                          mc.cores = 4)
+
+x<-lOpT$`73-Znf274`
+funRemove<-function(x){
+  x$z_score[x$p_value>0.05]<-0
+  x$norm_zscore[x$p_value>0.05]<-0
+  return(x)
+}
+lOpT<-lapply(lOpT,funRemove)
+mat<-matListOverlap(lOpT,zs.type = "norm")
+mat[is.infinite(mat)]<-0
+mat<-clustMatrix(mat,mirrored = TRUE)
+
+rangedVector <- function(x){
+  ind<-is.finite(x)
+  x[!is.finite(x)]<-max(x[ind])*2 # this is to change- I made only to have a value
+  if(sum(x[ind])!=0){
+    tr_vec<-as.numeric(x>0)
+    tr_vec[tr_vec==0]<-(-1)
+    x<-abs(x)
+    ranged_x<-(x-0)/(max(x)-0)
+    ranged_x<-ranged_x*tr_vec
+  }else{ranged_x<-vec}
+  return(ranged_x)
+}
 
 
-ANzscore=pt$numOverlaps$zscore/sqrt(length(A))
 
 
+mat<-matListOverlap(lOpT)
+mat<-clustMatrix(mat,mirrored = TRUE)
+corrplot(mat, tl.col="black", 
+         tl.srt=45,is.corr = F,
+         col=rev(paletteMatrix(50)),
+         tl.cex = 0.5,
+         pch.col="black")
 
+vec<-c(32,0,Inf,34,0,1)
+rangedVector(vec)

@@ -109,3 +109,18 @@ cleanNames<-function(listRS,cellName,
   names(listRS)<-paste0(1:length(names(listRS)),"-",names(listRS))
   return(listRS)
 }
+
+
+
+rangedVector <- function(x){
+  ind<-is.finite(x)
+  x[!is.finite(x)]<-max(x[ind])*2 # this is to change- I made only to have a value
+  if(sum(x[ind])!=0){
+    tr_vec<-as.numeric(x>0)
+    tr_vec[tr_vec==0]<-(-1)
+    x<-abs(x)
+    ranged_x<-(x-0)/(max(x)-0)
+    ranged_x<-ranged_x*tr_vec
+  }else{ranged_x<-vec}
+  return(ranged_x)
+}

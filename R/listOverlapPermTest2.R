@@ -35,7 +35,7 @@
 
 
 
-listOverlapPermTest<-function(Alist,Blist,sampling=FALSE,fraction=0.15,min_sampling=1000,
+listOverlapPermTest2<-function(Alist,Blist,sampling=FALSE,fraction=0.15,min_sampling=1000,
                               ranFun="randomizeRegions",universe=NULL,mc.cores=2,...){
   list.tabs<-list()
   list.pt<-list()
@@ -43,7 +43,7 @@ listOverlapPermTest<-function(Alist,Blist,sampling=FALSE,fraction=0.15,min_sampl
     print(names(Alist[i]))
     A<-Alist[[i]]
     if((sampling==TRUE) & (min_sampling<length(A))){      #aggiunto il min_sampling cpntrollare
-      A<-A[sample(length(A),round(length(A)*fraction))] #controllare se è vero
+      A<-A[sample(length(A),round(length(A)*fraction))] 
     }
     new.names<-names(Blist)
     func.list <- createFunctionsList(FUN=numOverlaps, param.name="B", values=Blist)
@@ -78,7 +78,6 @@ listOverlapPermTest<-function(Alist,Blist,sampling=FALSE,fraction=0.15,min_sampl
 
     }
 
-
     time<-proc.time() - ptm
     time<-time[3]/60
     print(paste0(" run in ",time,"  minute"))
@@ -86,39 +85,25 @@ listOverlapPermTest<-function(Alist,Blist,sampling=FALSE,fraction=0.15,min_sampl
     for (j in 1:length(pt)){
       if(pt[[j]]$zscore==0 | is.na(pt[[j]]$zscore) | is.nan((pt[[j]]$zscore))){ # modifica per non andare in errore
         zscore.norm<-0
-        max.val<-0
-        max.z<-0
-        max.z.norm<-0
         zscore.std<-0
       }else{
-
-        if(pt[[j]]$zscore>0){ # control NA
-          zscore.norm<-pt[[j]]$zscore/sqrt(length(A))
-          max.val<-min(length(A),length(Blist[[j]]))
-          max.z<-(max.val-mean(pt[[j]]$permuted))/sd(pt[[j]]$permuted)
-          max.z.norm<-max.z/sqrt(length(A))
-          zscore.std<-pt[[j]]$zscore/max.z
+        zscore.norm<-pt[[j]]$zscore/sqrt(length(A))
         }
-        if(pt[[j]]$zscore<=0){
-          zscore.norm<-pt[[j]]$zscore/sqrt(length(A))
-          max.val<-0
-          max.z<-(max.val-mean(pt[[j]]$permuted))/sd(pt[[j]]$permuted)
-          max.z.norm<-max.z/sqrt(length(A))
-          zscore.std<-abs(pt[[j]]$zscore)/max.z
-        }
-      }
+      
       vec<-data.frame(order.id=j,
                       name=new.names[j],
                       n_regions=length(Blist[[j]]),
                       z_score=pt[[j]]$zscore,
-                      norm_zscore=zscore.norm,
-                      std_zscore=zscore.std,
+                      #norm_zscore=zscore.norm,
+                      #std_zscore=rangedVector(norm_zscore),
                       p_value=pt[[j]]$pval,
                       n_overlaps=pt[[j]]$observed,
                       mean_perm_test=mean(pt[[j]]$permuted),
                       sd__perm_test=sd(pt[[j]]$permuted))
       tab<-rbind(vec,tab)
     }
+    tab$norm_zscore<-tab$z_score/sqrt(length(A))
+    tab$ranged_zscore<-rangedVector(tab$norm_zscore)
     #colnames(tab)<-c("order.id","name","nº region","z-score","norm.z-score","standard.z-score","p-value","n.overlaps","mean.perm","sd.perm")
     print(tab)
     list.tabs[[i]]<-tab
@@ -129,8 +114,9 @@ listOverlapPermTest<-function(Alist,Blist,sampling=FALSE,fraction=0.15,min_sampl
   }
   
   funRemove<-function(x){               # funzione per azzerare gli zScore che non passano in test 
-    x$z_score[x$p_value>0.05]<-0
+    x$z_score[x$p_value>0.05]<-0        #da portare fuori
     x$norm_zscore[x$p_value>0.05]<-0
+    x$ranged_zscore[x$p_value>0.05]<-0
     return(x)
   }
   lapply(list.tabs,funRemove)

@@ -2,7 +2,7 @@
 #'
 #' transform the ListOverlap Oject in a numeric matrix
 #'
-#' @usage matListOverlap(listOverlapPermTest.obj,zs.type="std",...)
+#' @usage matListOverlap(listOverlapPermTest.obj,zs.type="ranged_zscore",...)
 #'
 #' @param listOverlapPermTest.obj object from function
 #' (\code{\link{listOverlapPermTest}}
@@ -17,16 +17,11 @@
 #' #@importFrom ...
 #' @export matListOverlap
 #'
-matListOverlap<-function(listOverlapPermTest.obj,zs.type="std",...){
+matListOverlap<-function(listOverlapPermTest.obj,zs.type='ranged_zscore',...){
   A.obj<-listOverlapPermTest.obj
   mat<-vector()
   for (i in 1:length(A.obj)){
-    if (zs.type=="std"){
-      mat<-cbind(mat,as.numeric(A.obj[[i]][,6]))
-    }
-    if (zs.type=="norm"){
-      mat<-cbind(mat,as.numeric(A.obj[[i]][,5]))
-    }
+      mat<-cbind(mat,as.numeric(A.obj[[i]][,'ranged_zscore']))
   }
   colnames(mat)<-names(A.obj)
   rownames(mat)<-A.obj[[1]][,2]
