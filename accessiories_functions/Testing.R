@@ -10,15 +10,6 @@ library(ggplot2)
 
 ah<-AnnotationHub()
 
-
-# q_ah<-query(ah,c("HepG2","TF","Uni"))
-# TF_HepG2_peaks<-list()
-# for(i in 1:length(names(q_ah))){
-#   TF_HepG2_peaks[[i]]<-q_ah[[names(q_ah)[i]]]
-# }
-# names(TF_HepG2_peaks)<-q_ah$title
-# save(TF_HepG2_peaks,file="/home/malli/work/data/regionSets/TF_HepG2_peaks.RData")
-
 paletteMatrix<-colorRampPalette(c("#67001F", "#B2182B", "#D6604D", 
                    "#F4A582", "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE", 
                    "#4393C3", "#2166AC", "#053061"))
@@ -27,14 +18,7 @@ paletteLZMatrix<-colorRampPalette(c("red", "black","green"))
 
 setwd("/home/malli/GenoMatriXeR/R")
 for(i in list.files()){source(i)}
-
-# list_HepG2_CS<-list()
-# names_CS<-unique(HepG2_CS$abbr)
-# for(i in 1:length(names_CS)){
-#   list_HepG2_CS[[i]]<-HepG2_CS[HepG2_CS$abbr==names_CS[i]]
-# }
-# names(list_HepG2_CS)<-names_CS
-
+source("/home/malli/GenoMatriXeR/accessiories_functions/new_fun_genomaTrixer.R")
 
 ####################Calculate matrix (pt and lz for HepG2)
 lovPT_HepG2<-listOverlapPermTest(Alist = list_HepG2_CS,
@@ -103,17 +87,7 @@ load("/home/malli/work/data/regionSets/TF_ENCODE/TF_HepG2_peaks.RData")
 load("/home/malli/work/data/tables_GenoMatriXeR/tab_HepG2_GMXR_CRR_F010_nt25.RData")
 
 
-cleanNames<-function(listRS,cellName,
-                    vecEx=c("Uni","sc[0-9]","V0","Pcr","anb[0-9]","Iggrab","Forskln","Ucd")){
-                    newNames<-gsub(paste0("^(.*)",cellName),"",names(listRS))
-                    for(i in vecEx){
-                      newNames<-gsub(paste0(i,"(.*)$"),"",newNames) 
-                    }
-                    names(listRS)<-newNames
-                    listRS<-listRS[!is.na(names(listRS))]
-                    names(listRS)<-paste0(1:length(names(listRS)),"-",names(listRS))
-                    return(listRS)
-}
+
 
 TF_HepG2_peaks<-cleanNames(TF_HepG2_peaks,"Hepg2")
 
@@ -168,58 +142,7 @@ ind<-sample(length(A),round(length(A)*0.10))
 A=TF_HepG2_peaks$`58-Mxi1`
 B=TF_HepG2_peaks$`41-Brca1a300`
 
-testAssociations<-function(A,B,
-                           seqFraction=seq(0.1,1,0.1),
-                           ntimes=25){
 
-  vecZs<-vecNZs<-vecSZs<-vecNZs1<-vecSZs1<-vecOE<-vecP<-vecPV<-vector()
-  for(i in seq(0.1,1,0.1)){
-    ind<-sample(length(A),round(length(A)*i))
-    print(length(ind))
-    A1=A[ind]
-    pt<-permTest(A=A1,
-                 B=B,
-                 randomize.function = randomizeRegions,
-                 evaluate.function = numOverlaps,
-                 ntimes=ntimes,
-                 mc.cores=4,
-                 count.once=TRUE)
-    orig.ev<-pt$numOverlaps$observed
-    rand.ev<-pt$numOverlaps$permuted
-    zscore <- round((orig.ev - mean(rand.ev, na.rm = TRUE))/stats::sd(rand.ev,na.rm = TRUE), 4)
-    maxZscore <- round((length(A1) - mean(rand.ev, na.rm = TRUE))/stats::sd(rand.ev,na.rm = TRUE), 4)
-    normZS<-zscore/sqrt(length(A1))
-    normZSmax<-maxZscore/sqrt(length(A1))
-    stZscore<-normZS/normZSmax
-    
-    maxZscore1 <- round((min(length(A1),length(B)) - mean(rand.ev, na.rm = TRUE))/stats::sd(rand.ev,na.rm = TRUE), 4)
-    normZS1<-zscore/sqrt(min(length(A1),length(B)))
-    normZSmax1<-maxZscore/sqrt(min(length(A1),length(B)))
-    stZscore1<-normZS1/normZSmax1
-    
-    vecZs<-c(vecZs,zscore)
-    vecNZs<-c(vecNZs,normZS)
-    vecSZs<-c(vecSZs,stZscore)
-    vecNZs1<-c(vecNZs1,normZS1)
-    vecSZs1<-c(vecSZs1,stZscore1)
-
-    vecOE<-c(vecOE,orig.ev)
-    vecPV<-c(vecPV,pt$numOverlaps$pval)
-    vecP<-c(vecP,mean(rand.ev, na.rm = TRUE))
-  }
-  
-  DF<-DataFrame(frac=seq(0.1,1,0.1),
-                Nreg=round(length(A)*seq(0.1,1,0.1)),
-                zcore=round(vecZs,digits = 2),
-                p_value=vecPV,
-                norm_zscore=round(vecNZs,digits = 2),
-                norm_zscore1=round(vecNZs1,digits = 2),
-                stZscore=round(vecSZs,digits = 2),
-                stZscore1=round(vecSZs1,digits = 2),
-                n_ov=vecOE,
-                menPerm_ov=round(vecP,digits = 2))
-  return(DF)
-}
 
 A=TF_HepG2_peaks$`58-Mxi1`
 B=TF_HepG2_peaks$`41-Brca1a300`
@@ -267,12 +190,6 @@ plot(DF$Nreg,DF$norm_zscore,type="l")
 plot(DF$Nreg,DF$stZscore,type="l",ylim=c(-1,1))
 plot(DF$Nreg,DF$n_ov,type="l")
 
-samp20<-sample(77,20)
-lOpT<-listOverlapPermTest2(Alist = TF_HepG2_peaks[samp20],
-                          Blist = TF_HepG2_peaks[samp20],
-                          sampling = T,
-                          ranFun = "randomizeRegions",
-                          mc.cores = 4)
 
 x<-lOpT$`73-Znf274`
 funRemove<-function(x){
@@ -298,16 +215,63 @@ rangedVector <- function(x){
   return(ranged_x)
 }
 
+set.seed(136)
+samp20<-sample(77,20)
+
+fake_genome<-collapse_list(TF_HepG2_peaks[samp20])
+antiGenome<-subtractRegions(genome,fake_genome)
+fake_genome<-filterChromosomes(extendRegions(fake_genome,extend.start = 1e3,extend.end = 1e3))
+genome<-filterChromosomes(getGenome("hg19"))
+
+antiRegion<-createRandomRegions(nregions=20000, length.mean=300, length.sd=150, genome=antiGenome, mask=NULL, non.overlapping=TRUE)
+
+sum(width(fake_genome))
+
+gg<-getGenome(antiGenome)
+overlapRegions(antiRegion,antiGenome)
+antiRegion<-antiRegion[!overlapRegions(antiRegion,fake_genome,only.boolean = T)]
+
+matCorr<-listRGBinTable(TF_HepG2_peaks[samp20])
+mat1<-rquery.cormat(as.matrix(mcols(matCorr)),type = "full")
+
+seqlevels(gg)[1]
 
 
 
-mat<-matListOverlap(lOpT)
+testPeaks<-TF_HepG2_peaks[samp20]
+testPeaks$TestAntiPeaks<-antiRegion
+lOpT_withTest<-listOverlapPermTest2(Alist =testPeaks,   #new rule problem (check function comment)
+                           Blist = testPeaks,
+                           sampling = T,
+                           genome=fake_genome,
+                           ranFun = "randomizeRegions",
+                           mc.cores = 4) 
+load("/home/malli/work/data/regionSets/HepG2_list.BroadPeak.RData")
+
+lOpT_HM<-listOverlapPermTest2(Alist =CellPeakList,   #new rule problem (check function comment)
+                                    Blist = CellPeakList,
+                                    sampling = T,
+                                    genome="hg19",
+                                    ranFun = "randomizeRegions",
+                                    mc.cores = 4) 
+
+mat<-matListOverlap(lOpT_HM)
 mat<-clustMatrix(mat,mirrored = TRUE)
-corrplot(mat, tl.col="black", 
-         tl.srt=45,is.corr = F,
+corrplot(mat, tl.col="black",
+         tl.srt=45,
          col=rev(paletteMatrix(50)),
-         tl.cex = 0.5,
+         tl.cex = 1,
          pch.col="black")
 
+
+Matrix_Hepg2_HM_Permutation<-mat
+Matrix_Hepg2_HM_Correlation<-as.matrix(mcols(mat1))
+save(Matrix_Hepg2_HM_Permutation,
+     Matrix_Hepg2_HM_Correlation,
+     file="/home/malli/work/data/tables_GenoMatriXeR/Matrices_HM_CvsP.RData")
+
+
+mat1<-listRGBinTable(CellPeakList)
+rquery.cormat(as.matrix(mcols(mat1)),type="full")
 vec<-c(32,0,Inf,34,0,1)
 rangedVector(vec)
