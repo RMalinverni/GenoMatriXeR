@@ -1,9 +1,9 @@
 
-
-collapse_list<-function(list_GR){
+# choose systematic names for functions
+collapse_list<-function(list_GR){  
   GR<-GRanges()
   for (i in 1:length(list_GR)){
-    GR<-c(GR,filterChromosomes(list_GR[[i]]))
+    GR<-c(GR,filterChromosomes(list_GR[[i]]))  
   }
   return(joinRegions(GR))
 }
@@ -57,8 +57,7 @@ randomizeRegionsPerc<-function(GR,frac=0.2){
 testAssociations<-function(A,B,
                            seqFraction=seq(0.1,1,0.1),
                            ntimes=100){
-  A=TF_HepG2_peaks$`10-Foxa1`
-  B=TF_HepG2_peaks$`41-Brca1a300`
+
   vecZs<-vecNZs<-vecSZs<-vecOE<-vecP<-vecPV<-vector()
   for(i in seq(0.1,1,0.1)){
     ind<-sample(length(A),round(length(A)*i))
@@ -79,7 +78,7 @@ testAssociations<-function(A,B,
     stZscore<-normZS/normZSmax
     vecZs<-c(vecZs,zscore)
     vecNZs<-c(vecNZs,normZS)
-    vecSZs<-c(vecSZs,stZscore)
+    vecSZs<-c(vecSZs,stZscore) #cambiare
     vecOE<-c(vecOE,orig.ev)
     vecPV<-c(vecPV,pt$numOverlaps$pval)
     vecP<-c(vecP,mean(rand.ev, na.rm = TRUE))
@@ -112,7 +111,7 @@ cleanNames<-function(listRS,cellName,
 
 
 
-rangedVector <- function(x){
+rangedVector <- function(x){   # cambiare nome
   ind<-is.finite(x)
   x[!is.finite(x)]<-max(x[ind])*2 # this is to change- I made only to have a value
   if(sum(x[ind])!=0){
