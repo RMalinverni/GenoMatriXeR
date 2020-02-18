@@ -36,24 +36,21 @@
 
 
 listOverlapPermTest2<-function(Alist,Blist,sampling=FALSE,fraction=0.15,min_sampling=1000,
-                              ranFun="randomizeRegions",universe=NULL,mc.cores=2,...){
+                              ranFun="randomizeRegions",universe=NULL,
+                              verbose=FALSE,mc.cores=2,...){
   list.tabs<-list()
   list.pt<-list()
+  if (sampling==TRUE){   # I am making only the subsampling of Alist check if it is clever or stupid
+    Alist<-subList(Alist,min_sampling=min_sampling,fraction=fraction)  
+  }
+  
   for ( i in 1:length(Alist)){
     print(names(Alist[i]))
     A<-Alist[[i]]
-    if((sampling==TRUE) & (min_sampling<length(A))){      #aggiunto il min_sampling cpntrollare
-      A<-A[sample(length(A),round(length(A)*fraction))] 
-    }
     new.names<-names(Blist)
     func.list <- createFunctionsList(FUN=numOverlaps, param.name="B", values=Blist)
-
     ptm <- proc.time()
-    # pt <- tryCatch({permTest(A=A, evaluate.function=func.list,  #aggiungere TryCatch
-    #                randomize.function=randomizeRegions)}, error=function(e){
-    #                  print ("error detected")
-    #                  as.list(rep(NA,length(Blist)))})
-
+    
     if(ranFun=="randomizeRegions"){
       pt <- permTest( A=A, evaluate.function=func.list,  #aggiungere TryCatch
                       randomize.function=randomizeRegions,count.once=TRUE,mc.cores=mc.cores)
@@ -80,7 +77,7 @@ listOverlapPermTest2<-function(Alist,Blist,sampling=FALSE,fraction=0.15,min_samp
 
     time<-proc.time() - ptm
     time<-time[3]/60
-    print(paste0(" run in ",time,"  minute"))
+    if (verbose==TRUE){print(paste0(" run in ",time,"  minute"))}
     tab<-data.frame()
     for (j in 1:length(pt)){
       if(pt[[j]]$zscore==0 | is.na(pt[[j]]$zscore) | is.nan((pt[[j]]$zscore))){ # modifica per non andare in errore
@@ -94,8 +91,6 @@ listOverlapPermTest2<-function(Alist,Blist,sampling=FALSE,fraction=0.15,min_samp
                       name=new.names[j],
                       n_regions=length(Blist[[j]]),
                       z_score=pt[[j]]$zscore,
-                      #norm_zscore=zscore.norm,
-                      #std_zscore=rangedVector(norm_zscore),
                       p_value=pt[[j]]$pval,
                       n_overlaps=pt[[j]]$observed,
                       mean_perm_test=mean(pt[[j]]$permuted),
@@ -104,19 +99,15 @@ listOverlapPermTest2<-function(Alist,Blist,sampling=FALSE,fraction=0.15,min_samp
     }
     tab$norm_zscore<-tab$z_score/sqrt(length(A))
     tab$ranged_zscore<-rangedVector(tab$norm_zscore)
-    #colnames(tab)<-c("order.id","name","nº region","z-score","norm.z-score","standard.z-score","p-value","n.overlaps","mean.perm","sd.perm")
-    print(tab)
+    if (verbose==TRUE){print(tab)}  # remenber to activate only if verbose.... 
     list.tabs[[i]]<-tab
-    #list.pt[[i]]<-pt
     names(list.tabs)[i]<-names(Alist)[i]
-    #names(list.pt)[i]<-names(Alist)[i]
-
   }
   
-  funRemove<-function(x){               # funzione per azzerare gli zScore che non passano in test 
-    x$z_score[x$p_value>0.05]<-0        #da portare fuori
-    x$norm_zscore[x$p_value>0.05]<-0
-    x$ranged_zscore[x$p_value>0.05]<-0
+  funRemove<-function(x,max_pv=0.05){     # funzione per azzerare gli zScore che non passano in test 
+    x$z_score[x$p_value>max_pv]<-0        # da portare fuori
+    x$norm_zscore[x$p_value>max_pv]<-0
+    x$ranged_zscore[x$p_value>max_pv]<-0
     return(x)
   }
   lapply(list.tabs,funRemove)

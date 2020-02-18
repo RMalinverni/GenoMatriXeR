@@ -123,3 +123,20 @@ rangedVector <- function(x){   # cambiare nome
   }else{ranged_x<-vec}
   return(ranged_x)
 }
+
+subList<-function(Alist,min_sampling,fraction){
+  subAlist<-list()
+  for (i in 1:length(Alist)){
+    A<-Alist[[i]]
+    if(min_sampling<length(A)){   
+      subN<-round(length(A)*fraction)
+      if (subN<min_sampling) {subN<-min_sampling}
+      A<-A[sample(length(A),subN)]
+      subAlist[[i]]<-A
+    }else{subAlist[[i]]<-A}
+  }
+  names(subAlist)<-names(Alist)
+  return(subAlist)
+}
+
+

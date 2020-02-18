@@ -8,11 +8,14 @@ library(corrplot)
 library(ggplot2)
 
 
-#ah<-AnnotationHub()
+ah<-AnnotationHub()
+
 paletteMatrix<-colorRampPalette(c("#67001F", "#B2182B", "#D6604D", 
                    "#F4A582", "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE", 
                    "#4393C3", "#2166AC", "#053061"))
 paletteLZMatrix<-colorRampPalette(c("red", "black","green"))
+
+
 setwd("/home/malli/GenoMatriXeR/R")
 for(i in list.files()){source(i)}
 source("/home/malli/GenoMatriXeR/accessiories_functions/new_fun_genomaTrixer.R")
@@ -246,8 +249,8 @@ lOpT_withTest<-listOverlapPermTest2(Alist =testPeaks,   #new rule problem (check
                            mc.cores = 4) 
 load("/home/malli/work/data/regionSets/HepG2_list.BroadPeak.RData")
 
-lOpT_HM<-listOverlapPermTest2(Alist =CellPeakList,   #new rule problem (check function comment)
-                                    Blist = CellPeakList,
+lOpT_HM<-listOverlapPermTest2(Alist =totalList,   #new rule problem (check function comment)
+                                    Blist = totalList,
                                     sampling = T,
                                     genome="hg19",
                                     ranFun = "randomizeRegions",
@@ -257,6 +260,10 @@ mat<-matListOverlap(lOpT_HM)
 mat<-clustMatrix(mat,mirrored = TRUE)
 
 load("/home/malli/work/data/tables_GenoMatriXeR/Matrices_HM_CvsP.RData")
+names(CellPeakList)
+HepG2_HM<-cleanNames(CellPeakList,vecEx = c("broadPeak"),cellName = "-")
+TF_HepG2_peaks<-cleanNames(TF_HepG2_peaks,cellName = "Hepg2")
+totalList<-c(TF_HepG2_peaks[samp20],HepG2_HM)
 
 corrplot(Matrix_Hepg2_HM_Permutation, tl.col="black",
          tl.srt=45,
@@ -272,50 +279,11 @@ corrplot(Matrix_Hepg2_HM_Permutation, tl.col="black",
 #      file="/home/malli/work/data/tables_GenoMatriXeR/Matrices_HM_CvsP.RData")
 
 
-mat1<-listRGBinTable()
+mat1<-listRGBinTable(totalList)
 rquery.cormat(Matrix_Hepg2_HM_Correlation,type="full")
+rquery.cormat(as.matrix(mcols(mat1)),type="full")
+
+
+
 vec<-c(32,0,Inf,34,0,1)
 rangedVector(vec)
-####################################################333
-HM_HepG2<-cleanNames(CellPeakList,vecEx = c(".broad"),cellName = "-")
-TF_HepG2_peaks<-cleanNames(TF_HepG2_peaks,cellName = "Hepg2")
-listTotal<-c(TF_HepG2_peaks[samp20],HM_HepG2)
-lOpT_hepG2_HM_TF<-listOverlapPermTest2(Alist =listTotal,   #new rule problem (check function comment)
-                              Blist = listTotal,
-                              sampling = T,
-                              genome="hg19",
-                              ranFun = "randomizeRegions",
-                              mc.cores = 2)
-
-mat_HepG2_HM_TF<-matListOverlap(lOpT_hepG2_HM_TF)
-mat_HepG2_HM_TF<-clustMatrix(mat_HepG2_HM_TF,mirrored = TRUE)
-corrplot(mat_HepG2_HM_TF, tl.col="black",
-         tl.srt=45,
-         col=rev(paletteMatrix(50)),
-         tl.cex = 1,
-         pch.col="black")
-
-corrGR_HepG2_HM_TF<-listRGBinTable(listTotal)
-rquery.cormat(as.matrix(mcols(corrGR_HepG2_HM_TF)),type="full")
-save(lOpT_hepG2_HM_TF,corrGR_HepG2_HM_TF,file="/home/malli/work/data/tables_GenoMatriXeR/corr_vs_assoc_HepG2_HmvsTF.RData")
-
-##########################################################################3
-
-lzTest<-lZAssociations(A = listTotal$`34-Tead4`,
-               Blist = listTotal,
-               sampling = TRUE,window = 2000,step = 100)
-
-matLz<-matLZAssociations(lZobj = lzTest,A = listTotal )
-matLz<-clustMatrix(matLz,lZ_tab = TRUE)
-
-corrplot(matLz, tl.col="black", 
-         tl.srt=45,is.corr = F,
-         col=rev(paletteLZMatrix(50)),
-         tl.cex = 0.5,
-         pch.col="black",
-         bg = "black",
-         addgrid.col = "black")
-
-landscapePlot(matLz,rotation = 0)
-
-
