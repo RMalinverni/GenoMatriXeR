@@ -31,13 +31,13 @@
 #'
 #' @examples  ...
 #'
-#' @export listOverlapPermTest
+#' @export multiOverlapPermTest
 
 
 
 
 
-listOverlapPermTest2<-function(Alist,Blist=NULL,
+multiOverlapPermTest<-function(Alist,Blist=NULL,
                               sampling=FALSE,fraction=0.15, min_sampling=1000,
                               
                               ranFun="randomizeRegions", universe=NULL,
@@ -81,7 +81,7 @@ listOverlapPermTest2<-function(Alist,Blist=NULL,
     }
     if(ranFun=="resampleRegions"){
       if (is.null(universe)){
-        print("resampleRegions function need that universe parameters in not NULL universe will created using all the regions present in Alist")
+        warning("resampleRegions function need that 'universe' is not NULL, universe was created using all the regions present in Alist")
         uniList<-data.frame()
         for(u in 1:length(Alist)){
           df<-toDataframe(Alist[[u]])[,1:3]
@@ -126,6 +126,9 @@ listOverlapPermTest2<-function(Alist,Blist=NULL,
     names(list.tabs)[i]<-names(Alist)[i]
   }
   list.tabs<-c(list(parameters=as.list(paramList)),list.tabs)
+  class(list.tabs) <- "multiOverlapPermTestList"
+  
+  
   return(list.tabs)
 }
 

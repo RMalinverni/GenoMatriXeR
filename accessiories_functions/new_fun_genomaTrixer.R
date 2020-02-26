@@ -139,4 +139,34 @@ subList<-function(Alist,min_sampling,fraction){
   return(subAlist)
 }
 
+funRemove<-function(x,max_pv=0.05){     # funzione per azzerare gli zScore che non passano in test 
+  x$z_score[x$adj.p_value>max_pv]<-0        # da portare fuori
+  x$norm_zscore[x$adj.p_value>max_pv]<-0
+  x$ranged_zscore[x$adj.p_value>max_pv]<-0
+  return(x)
+}
+
+reSizeRegions<-function(regGR,method,width=NULL){
+  
+  if(method=="tile"){
+    
+    if (!is.null(width)){
+      regGR<-unlist(tile(regGR,width = width))
+    }else{
+      warning("if you do not provide a value for 'width' will be use as 'width'  the mean of the width of the provided GRanges")
+      regGR<-unlist(tile(regGR,width = mean(width(regGR))))
+    }
+  }
+  
+  if(method=="homogenize"){
+    meanWidth<-mean(width(regGR))
+    sdWidth<-sd(width(regGR))
+    acceptedReg<-regGR[meanWidth<=meanWidth+(sdWidth*2)]
+    removedReg<-regGR[meanWidth>meanWidth+(sdWidth*2)]
+    removedReg<-unlist(tile(removedReg,width = meanWidth))
+    regGR<-c(acceptedReg,removedReg)
+  }
+  
+  return(regGR)
+}
 

@@ -10,6 +10,11 @@ library(ggplot2)
 
 ah<-AnnotationHub()
 
+# qhs<-query(ah,c("ENCODE","broadPeak","E118-"))
+# HM_HepG2_peaks<-list()
+# for(i in 1:length(qhs$title)){
+#   HM_HepG2_peaks[[i]] <- qhs[[qhs$ah_id[i]]]
+# }
 paletteMatrix<-colorRampPalette(c("#67001F", "#B2182B", "#D6604D", 
                    "#F4A582", "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE", 
                    "#4393C3", "#2166AC", "#053061"))
@@ -283,7 +288,108 @@ mat1<-listRGBinTable(totalList)
 rquery.cormat(Matrix_Hepg2_HM_Correlation,type="full")
 rquery.cormat(as.matrix(mcols(mat1)),type="full")
 
-
-
 vec<-c(32,0,Inf,34,0,1)
 rangedVector(vec)
+
+load('/home/malli/work/data/regionSets/HepG2_list.BroadPeak.RData')
+load('/home/malli/work/data/regionSets/K562_list.BroadPeak.RData')
+
+
+
+HM_HepG2_peaks<-cleanNames(HM_HepG2_peaks,vecEx = c(".broad"),cellName = "-")
+HM_K562_peaks<-cleanNames(HM_K562_peaks,vecEx = c(".broad"),cellName = "-")
+
+HM_K562_peaks<-HM_K562_peaks[-(grep("H3K9me1",names(HM_K562_peaks)))]
+
+setwd("/home/malli/work/data/regionSets/")
+load("PTlists.RData")
+
+
+# PTList_HepG2_HM<-listOverlapPermTest2(Alist = HM_HepG2_peaks,
+#                                       Blist = HM_HepG2_peaks,
+#                                       ranFun = "randomizeRegions",
+#                                       sampling = TRUE,
+#                                       fraction = 0.15)
+# 
+# PTList_K562_HM<-listOverlapPermTest2(Alist = HM_K562_peaks,
+#                                     Blist = HM_K562_peaks,
+#                                     ranFun = "randomizeRegions",
+#                                     sampling = TRUE,
+#                                     fraction = 0.15)
+  PTList_K562_HM<-listOverlapPermTest2(Alist = HM_HepG2_peaks,
+                                     Blist = HM_HepG2_peaks,
+                                     ranFun = "resampleRegions",
+                                     sampling = TRUE,
+                                     fraction = 0.15, verbose = TRUE)
+
+ PTList_K562_HM<-listOverlapPermTest2(Alist = HM_K562_peaks,
+                                     Blist = HM_K562_peaks,
+                                     ranFun = "resampleRegions",
+                                     sampling = TRUE,
+                                     fraction = 0.15)
+
+
+ 
+ 
+mat_HepG2<-clustMatrix(matListOverlap(PTList_HepG2_HM),mirrored = TRUE)
+mat_K562<-clustMatrix(matListOverlap(PTList_K562_HM),mirrored = TRUE)
+
+
+
+
+colnames(a)[order(colnames(a))]
+colnames(b)[order(colnames(b))]
+colnames(mat_HepG2)<-gsub("^(.*)-","",colnames(mat_HepG2)) 
+rownames(mat_HepG2)<-gsub("^(.*)-","",rownames(mat_HepG2)) 
+colnames(mat_K562)<-gsub("^(.*)-","",colnames(mat_K562)) 
+rownames(mat_K562)<-gsub("^(.*)-","",rownames(mat_K562)) 
+
+ind<-order(colnames(mat_HepG2))
+mat_HepG2<-mat_HepG2[ind,ind]
+ind<-order(colnames(mat_K562))
+mat_K562<-mat_K562[ind,ind]
+
+
+barplot(unlist(lapply(HM_K562_peaks,function(a){max(width(a))})))
+barplot(unlist(lapply(HM_HepG2_peaks,function(a){max(width(a))})))
+
+
+
+
+
+a<-corrplot(mat_HepG2, tl.col="black", 
+         tl.srt=45,is.corr = F,
+         col=rev(paletteMatrix(50)),
+         tl.cex = 0.8,
+         pch.col="black",
+         cl.lim = c(-1,1))
+
+b<-corrplot(mat_K562, tl.col="black", 
+            tl.srt=45,is.corr = F,
+            col=rev(paletteMatrix(50)),
+            tl.cex = 0.8,
+            pch.col="black",
+            cl.lim = c(-1,1),title = "K562-Histone Modifications")
+
+corrplot(clustMatrix(a-b,mirrored = TRUE), tl.col="black", 
+            tl.srt=45,is.corr = F,
+            col=rev(paletteMatrix(50)),
+            tl.cex = 0.8,
+            pch.col="black",cl.ratio=0.1,cl.lim = c(-1,1))
+
+
+corrMatA<-listRGBinTable(HM_HepG2_peaks)
+mat1<-rquery.cormat(as.matrix(mcols(corrMatA)),type = "full")
+
+
+
+corrMatB<-listRGBinTable(HM_K562_peaks)
+mat2<-rquery.cormat(as.matrix(mcols(corrMatB)),type = "full")
+
+
+
+
+
+
+
+
