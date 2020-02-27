@@ -1,25 +1,33 @@
 #' Multiple Permutation test
 #'
-#' Perform a multiple permutation test between each element of 2 list of Region
-#' set
+#' Perform a multiple permutation test between each elements of 2 list of Region
+#' set the resut will be store in a multiOvelapPermTest class
 #'
-#' @usage listOvelapPermtest( Alist, Blist, sampling=FALSE, fraction=0.15,
-#' ranFun="randomizeRegions", ...)
-#'
-#' @param Alist list of Region Set of any accepted formats by  \code{\link{regioneR}} package
+#' @usage multiOvelapPermTest(Alist, Blist, sampling=FALSE, fraction=0.15, min_sampling=1000,
+#'                            ranFun="randomizeRegions",universe=NULL, adj_pv_method="BH", 
+#'                            max_pv=0.05,verbose=FALSE,mc.cores=2 ...)
+#' 
+#' 
+#' @param Alist GRangesList or list of Region Set of any accepted formats by  \code{\link{regioneR}} package
 #' (\code{\link{GenomicRanges}}, \code{\link{data.frame}} etc...)
-#' @param Blist list of Region Set of any accepted formats by \code{\link{regioneR}} package
+#' @param Blist GRangesList or list of Region Set of any accepted formats by  \code{\link{regioneR}} package
 #' (\code{\link{GenomicRanges}}, \code{\link{data.frame}} etc...)
-#' @param sampling boolean if is true the function will use only a sample of
-#' each element of Alist to perform the test
-#' @param fraction numeric, if sampling==TRUE is the fraction of the region sets
-#' used to perform the test
+#' @param sampling Boolean, if is true the function will use only a sample of
+#' each element of Alist to perform the test (default = FALSE)
+#' @param fraction Numeric, if sampling==TRUE is the fraction of the region sets
+#' used to perform the test (default = 0.15)
+#' @param min_sampling numeric, minimum number of regions accepted after the sampling, if the number of the sampled 
+#' regions is less than min_sampling will be used min_sampling value as number of regions
 #' @param ranFun c("randomizeRegions","circularRandomizeRegions",
-#' "resampleRegions") choose the randomization strategy used for the test
+#' "resampleRegions"), choose the randomization strategy used for the test see  \code{\link{regioneR}}
 #' @param universe (default = NULL) using only when resamplinRegions function is
 #' selected
-#' @param ...  further arguments to be passed to other methods.
-#'
+#' @param adj_pv_method Charachter, the method used for the calculation of the adjusted p-value, 
+#' to choose between the options of \code{\link{p.adjust}}. (default = "BH")
+#' @param  max_pv Numeric, the z-scores associate a p-values higher of this parameter will be transform in 0. (default =0.05)
+#' @param  verbose Boolean, if verbose
+#' @param ...  further arguments to be passed to other methods. 
+#' 
 #' @details  the permutation test core used in this function permit to change
 #' \code{"randomize.function"} \code{\link{randomizeRegions}},
 #' \code{\link{circularRandomizeRegions}}, \code{\link{resampleRegions}} or a
@@ -35,15 +43,11 @@
 
 
 
-
-
 multiOverlapPermTest<-function(Alist,Blist=NULL,
                               sampling=FALSE,fraction=0.15, min_sampling=1000,
-                              
                               ranFun="randomizeRegions", universe=NULL,
-                              adj_pv_method="BH", max_pv=0.05, 
-                              verbose=FALSE,mc.cores=2,...){
-  
+                              adj_pv_method="BH", max_pv=0.05, pv="adj.pv", 
+                              verbose=FALSE,subEx=NA,mc.cores=2,...){
   
   paramList<-list(Alist=deparse(substitute(Alist)),
               Blist=deparse(substitute(Blist)),
@@ -60,7 +64,7 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
   if(is.null(Blist)){Blist<-Alist}
   list.tabs<-list()
   list.pt<-list()
-  if (sampling==TRUE){   # I am making only the subsampling of Alist check if it is clever or stupid
+  if (sampling==TRUE){  
     Alist<-subList(Alist,min_sampling=min_sampling,fraction=fraction)  
   }
   
@@ -73,11 +77,11 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
     
     if(ranFun=="randomizeRegions"){
       pt <- permTest( A=A, evaluate.function=func.list,  #aggiungere TryCatch
-                      randomize.function=randomizeRegions,count.once=TRUE,mc.cores=mc.cores)
+                      randomize.function=randomizeRegions,count.once=TRUE,mc.cores=mc.cores,...)
     }
     if(ranFun=="circularRandomizeRegions"){
       pt <- permTest(A=A,evaluate.function=func.list,
-                     randomize.function=circularRandomizeRegions,count.once=TRUE,mc.cores=mc.cores)
+                     randomize.function=circularRandomizeRegions,count.once=TRUE,mc.cores=mc.cores,...)
     }
     if(ranFun=="resampleRegions"){
       if (is.null(universe)){
@@ -91,7 +95,7 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
       }
       pt <- permTest(A=A,evaluate.function=func.list,
                      randomize.function=resampleRegions,universe=universe,
-                     count.once=TRUE,mc.cores=mc.cores)
+                     count.once=TRUE,mc.cores=mc.cores,...)
 
     }
 
@@ -120,7 +124,7 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
     tab$norm_zscore<-tab$z_score/sqrt(length(A))
     tab$ranged_zscore<-rangedVector(tab$norm_zscore)
     tab$adj.p_value<-round(p.adjust(tab$p_value,method=adj_pv_method),digits = 4)
-    tab<-funRemove(tab,max_pv=max_pv)
+    tab<-funRemove(tab,max_pv=max_pv,pv=pv,subEx=subEx)
     if (verbose==TRUE){print(tab)}  # remember to activate only if verbose.... 
     list.tabs[[i]]<-tab
     names(list.tabs)[i]<-names(Alist)[i]

@@ -304,6 +304,18 @@ HM_K562_peaks<-HM_K562_peaks[-(grep("H3K9me1",names(HM_K562_peaks)))]
 setwd("/home/malli/work/data/regionSets/")
 load("PTlists.RData")
 
+cleanRegions(regGR, method="tile")
+
+
+
+  
+  
+  
+
+
+
+
+
 
 # PTList_HepG2_HM<-listOverlapPermTest2(Alist = HM_HepG2_peaks,
 #                                       Blist = HM_HepG2_peaks,
@@ -316,8 +328,7 @@ load("PTlists.RData")
 #                                     ranFun = "randomizeRegions",
 #                                     sampling = TRUE,
 #                                     fraction = 0.15)
-  PTList_K562_HM<-listOverlapPermTest2(Alist = HM_HepG2_peaks,
-                                     Blist = HM_HepG2_peaks,
+  PTList_K562_HM<-listOverlapPermTest2(Alist = HM_K562_peaks[1:3],
                                      ranFun = "resampleRegions",
                                      sampling = TRUE,
                                      fraction = 0.15, verbose = TRUE)
@@ -387,9 +398,15 @@ corrMatB<-listRGBinTable(HM_K562_peaks)
 mat2<-rquery.cormat(as.matrix(mcols(corrMatB)),type = "full")
 
 
+A<-HM_K562_peaks[[1]]
+Blist<-HM_K562_peaks[1:3]
+func.list <- createFunctionsList(FUN=numOverlaps, param.name="B", values=Blist)
+pt <- permTest( A=A, evaluate.function=func.list,  #aggiungere TryCatch
+                randomize.function=randomizeRegions,count.once=TRUE,mc.cores=mc.cores)
 
 
-
-
-
+test<-multiOverlapPermTest(Alist = HM_K562_peaks[1:3],
+                                     ranFun = "resampleRegions",
+                                     sampling = TRUE,
+                                     fraction = 0.15, verbose = TRUE)
 

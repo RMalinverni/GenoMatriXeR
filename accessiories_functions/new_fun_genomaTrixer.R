@@ -45,11 +45,11 @@ listRGBinTable<-function(listGRs,bin=1000,column=NULL,genGR=NULL,genome="hg19",c
 }
 
 
-randomizeRegionsPerc<-function(GR,frac=0.2){
+randomizeRegionsPerc<-function(GR,genome,frac=0.2,...){
   nc<-round(length(GR)*frac)
   change<-sample(length(GR),nc)
   GR1<-GR[-change]
-  GR2<-randomizeRegions(GR[change],genome = "hg19")
+  GR2<-randomizeRegions(GR[change],genome=genome)
   GR3<-c(GR1,GR2)
   return(GR3)
 }
@@ -120,7 +120,7 @@ rangedVector <- function(x){   # cambiare nome
     x<-abs(x)
     ranged_x<-(x-0)/(max(x)-0)
     ranged_x<-ranged_x*tr_vec
-  }else{ranged_x<-vec}
+  }else{ranged_x<-rep(0,length(x))}
   return(ranged_x)
 }
 
@@ -139,10 +139,22 @@ subList<-function(Alist,min_sampling,fraction){
   return(subAlist)
 }
 
-funRemove<-function(x,max_pv=0.05){     # funzione per azzerare gli zScore che non passano in test 
-  x$z_score[x$adj.p_value>max_pv]<-0        # da portare fuori
-  x$norm_zscore[x$adj.p_value>max_pv]<-0
-  x$ranged_zscore[x$adj.p_value>max_pv]<-0
+funRemove<-function(x,max_pv=0.05,pv="adj.pv",subEx=0,...){     # funzione per azzerare gli zScore che non passano in test 
+  
+  
+  
+  if(pv=="adj.pv"){
+    x$z_score[x$adj.p_value>max_pv]<-subEx     
+    x$norm_zscore[x$adj.p_value>max_pv]<-subEx
+    x$ranged_zscore[x$adj.p_value>max_pv]<-subEx
+  }
+  
+  if(pv=="p.value"){
+    x$z_score[x$p_value>max_pv]<-subEx     
+    x$norm_zscore[x$p_value>max_pv]<-subEx
+    x$ranged_zscore[x$p_value>max_pv]<-subEx
+  }
+  
   return(x)
 }
 
@@ -170,3 +182,100 @@ reSizeRegions<-function(regGR,method,width=NULL){
   return(regGR)
 }
 
+clustGenomicMatrix<-function(mat,hc.method="ward.D",dist.method="euclidean",nboot=1000,...){
+  fit <- pvclust(mat, method.hclust="ward.D2",
+                 method.dist="euclidean",nboot = nboot,...)
+  ind<-fit$hclust$order
+  newNames<-colnames(mat)[ind]
+  mat<-mat[newNames,newNames]
+  
+  mat1<-list(GMat=mat,GFit=fit)
+  class(mat1)<-"GenomicMatrix"
+  return(mat1)
+}
+
+
+createRandomRegionSets<-function(RegionSet,frac=0.5,seedName='',seed=123,nregions=10,genome="hg19",...){
+  set.seed(seed)
+  lista<-list()
+  for(i in 1:nregions){
+    if (i==1){
+      lista[[i]]<-randomizeRegionsPerc(RegionSet,frac=frac,genome=genome)
+    }else{
+      lista[[i]]<-randomizeRegionsPerc(lista[[i-1]],frac=frac,genome=genome)
+    }
+    names(lista)[[i]]<-paste0(seedName,i)
+  }
+  return(lista)
+}
+
+
+makeGenomicMatrix<-function(multiOPTL.obj,hc.method="ward.D",dist.method="euclidean",
+                            nboot=1000,zs.type='ranged_zscore',...){
+  
+  
+  if (class(multiOPTL.obj)=="multiOverlapPermTestList"){     #this work fro simmetric matrix
+    mat<-matListOverlap(multiOPTL.obj,zs.type=zs.type)      
+    fit <- pvclust(mat, method.hclust=hc.method, method.dist=dist.method,
+                   nboot = nboot,...)
+    ind<-fit$hclust$order
+    newNames<-colnames(mat)[ind]
+    mat<-mat[newNames,newNames]
+    nc<-pamk(mat)$nc 
+    clus <- kmeans(mat, centers=nc)
+    mat1<-list(GMat=mat,GFit=fit,GKmean=clus)
+    class(mat1)<-"GenomicMatrix"
+    return(mat1)
+  }
+  
+}
+
+
+plotGenomeMatrix<-function(GenMat,
+                           graph.type, tl.col= "black",tl.srt=45, colMatrix="default",
+                           tl.cex = 0.5, pch.col ="black",cl.lim = c(-1,1),
+                           nc=NULL,
+                           color=TRUE, shade=TRUE, labels=2, lines=0,
+                           alpha=.95, lwd=2 , pv ="bp", border = "red") {
+  
+  graph.type <- match.arg(graph.type, c("matrix", "pvclust", "clusplot","all"))
+  
+  if (class(GenMat)!="GenomicMatrix"){stop("the input is not a Genomatrix Object")}
+  
+  if (!hasArg(GenMat)) {stop("A is missing")}
+  
+  paletteMatrix<-colorRampPalette(c("#67001F", "#B2182B", "#D6604D",  "#F4A582", 
+                                    "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE", 
+                                    "#4393C3", "#2166AC", "#053061"))
+  
+  if(colMatrix=="default") {colMatrix<-rev(paletteMatrix(50))}
+  
+  if (is.null(nc)){
+    set.seed(123)
+    nc<-pamk(GenMat$GMat)$nc}
+  clus <- kmeans(GenMat$GMat, centers=nc)
+  
+  if (graph.type=="matrix" | graph.type=="all" ){
+    
+    corrA<-corrplot(GenMat$GMat, tl.col = tl.col, 
+                    tl.srt = tl.srt, is.corr = F,
+                    col = colMatrix, tl.cex = tl.cex,
+                    pch.col=pch.col, cl.lim =  cl.lim)
+    
+  }
+  
+  if (graph.type=="clusplot" | graph.type=="all" ){
+  
+    clusplot(GenMat$GMat, clus$cluster, color = color, shade = shade, 
+             labels = labels, lines = lines)
+    
+  }
+  
+  if (graph.type=="pvclust" | graph.type=="all" ){
+ 
+    plot(mat$GFit)
+    pvrect(mat$GFit, alpha=alpha, lwd=lwd ,pv =pv, border = "red")
+    
+  }
+  
+}

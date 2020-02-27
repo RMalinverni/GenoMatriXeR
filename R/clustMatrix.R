@@ -44,5 +44,6 @@ clustMatrix<-function(mat,method="complete",mirrored=FALSE,lZ_tab=FALSE,...){
       mat1<-mat[ind,ind]
     }
   }
+  groups <- cutree(fit, k=5)
   return(mat1)
 }

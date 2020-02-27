@@ -18,7 +18,7 @@
 #' @export matListOverlap
 #'
 matListOverlap<-function(listOverlapPermTest.obj,zs.type='ranged_zscore',...){
-  A.obj<-listOverlapPermTest.obj
+  A.obj<-listOverlapPermTest.obj[-1]
   mat<-vector()
   for (i in 1:length(A.obj)){
       mat<-cbind(mat,as.numeric(A.obj[[i]][,'ranged_zscore']))
