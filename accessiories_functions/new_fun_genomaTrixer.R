@@ -240,53 +240,53 @@ makeGenomicMatrix<-function(mPT,hc.method="ward.D",dist.method="euclidean",
 
 
 plotGenomeMatrix<-function(GenMat,
-                           graph.type, tl.col= "black",tl.srt=45, colMatrix="default",
-                           tl.cex = 0.5, pch.col ="black",cl.lim = c(-1,1),
-                           nc=NULL,
-                           color=TRUE, shade=TRUE, labels=2, lines=0,
-                           alpha=.95, lwd=2 , pv="au", border="red") {
-  
-  graph.type <- match.arg(graph.type, c("matrix", "pvclust", "clusplot","all"))
-  
-  if (class(GenMat)!="GenomicMatrix"){stop("the input is not a GenoMatrix Object")}
-  
-  if (!hasArg(GenMat)) {stop("A is missing")}
-  
-  paletteMatrix<-colorRampPalette(c("#67001F", "#B2182B", "#D6604D",  "#F4A582", 
-                                    "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE", 
-                                    "#4393C3", "#2166AC", "#053061"))
-  
-  if(colMatrix=="default") {colMatrix<-rev(paletteMatrix(50))}
-  
-  if (is.null(nc)){
-    set.seed(123)
-    nc<-pamk(GenMat$GMat)$nc}
-  clus <- kmeans(GenMat$GMat, centers=nc)
-  
-  if (graph.type=="matrix" | graph.type=="all" ){
+                             graph.type, tl.col= "black",tl.srt=45, colMatrix="default",
+                             tl.cex = 0.5, pch.col ="black",cl.lim = c(-1,1),
+                             nc=NULL,
+                             color=TRUE, shade=TRUE, labels=2, lines=0,
+                             alpha=.95, lwd=2 , pv="au", border="red") {
     
-    corrA<-corrplot(GenMat$GMat, tl.col = tl.col, 
-                    tl.srt = tl.srt, is.corr = F,
-                    col = colMatrix, tl.cex = tl.cex,
-                    pch.col=pch.col, cl.lim =  cl.lim)
+    graph.type <- match.arg(graph.type, c("matrix", "pvclust", "clusplot","all"))
+    
+    if (class(GenMat)!="GenomicMatrix"){stop("the input is not a GenoMatrix Object")}
+    
+    if (!hasArg(GenMat)) {stop("A is missing")}
+    
+    paletteMatrix<-colorRampPalette(c("#67001F", "#B2182B", "#D6604D",  "#F4A582", 
+                                      "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE", 
+                                      "#4393C3", "#2166AC", "#053061"))
+    
+    if(colMatrix=="default") {colMatrix<-rev(paletteMatrix(50))}
+    
+    if (is.null(nc)){
+      set.seed(123)
+      nc<-pamk(GenMat$GMat)$nc}
+    clus <- kmeans(GenMat$GMat, centers=nc)
+    
+    if (graph.type=="matrix" | graph.type=="all" ){
+      
+      corrA<-corrplot(GenMat$GMat, tl.col = tl.col, 
+                      tl.srt = tl.srt, is.corr = F,
+                      col = colMatrix, tl.cex = tl.cex,
+                      pch.col=pch.col, cl.lim =  cl.lim)
+      
+    }
+    
+    if (graph.type=="clusplot" | graph.type=="all" ){
+    
+      clusplot(GenMat$GMat, clus$cluster, color = color, shade = shade, 
+               labels = labels, lines = lines)
+      
+    }
+    
+    if (graph.type=="pvclust" | graph.type=="all" ){
+   
+      plot(GenMat$GFit)
+      pvrect(GenMat$GFit, alpha=alpha, lwd=lwd ,pv=pv, border = "red")
+      
+    }
     
   }
-  
-  if (graph.type=="clusplot" | graph.type=="all" ){
-  
-    clusplot(GenMat$GMat, clus$cluster, color = color, shade = shade, 
-             labels = labels, lines = lines)
-    
-  }
-  
-  if (graph.type=="pvclust" | graph.type=="all" ){
- 
-    plot(mat$GFit)
-    pvrect(mat$GFit, alpha=alpha, lwd=lwd ,pv=pv, border = "red")
-    
-  }
-  
-}
 
 
 createUniverse<-function(Alist){
