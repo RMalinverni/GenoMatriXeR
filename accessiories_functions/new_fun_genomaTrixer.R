@@ -210,19 +210,27 @@ createRandomRegionSets<-function(RegionSet,frac=0.5,seedName='',seed=123,nregion
 }
 
 
-makeGenomicMatrix<-function(multiOPTL.obj,hc.method="ward.D",dist.method="euclidean",
-                            nboot=1000,zs.type='ranged_zscore',...){
+makeGenomicMatrix<-function(mPT,hc.method="ward.D",dist.method="euclidean",
+                            nboot=1000,zs.type='ranged_zscore', symm_matrix=TRUE,...){
   
   
-  if (class(multiOPTL.obj)=="multiOverlapPermTestList"){     #this work fro simmetric matrix
-    mat<-matListOverlap(multiOPTL.obj,zs.type=zs.type)      
+  # if (symm_matrix==TRUE & (ncol(mPT)!=nrow(mPT))){
+  #   symm_matrix<-FALSE
+  #   warning("impossible to create symmetrical matrix, number of matrix columns is different from number of rows")
+  # }
+  if (class(mPT)=="multiPermTest"){     
+    mat<-matMultiPermTest(mPT,zs.type=zs.type)      
     fit <- pvclust(mat, method.hclust=hc.method, method.dist=dist.method,
                    nboot = nboot,...)
     ind<-fit$hclust$order
-    newNames<-colnames(mat)[ind]
-    mat<-mat[newNames,newNames]
-    nc<-pamk(mat)$nc 
-    clus <- kmeans(mat, centers=nc)
+    if (symm_matrix==TRUE){
+      
+      newNames<-colnames(mat)[ind]
+      mat<-mat[newNames,newNames]
+      nc<-pamk(mat)$nc 
+      clus <- kmeans(mat, centers=nc)
+      
+    }
     mat1<-list(GMat=mat,GFit=fit,GKmean=clus)
     class(mat1)<-"GenomicMatrix"
     return(mat1)
@@ -236,11 +244,11 @@ plotGenomeMatrix<-function(GenMat,
                            tl.cex = 0.5, pch.col ="black",cl.lim = c(-1,1),
                            nc=NULL,
                            color=TRUE, shade=TRUE, labels=2, lines=0,
-                           alpha=.95, lwd=2 , pv ="bp", border = "red") {
+                           alpha=.95, lwd=2 , pv="au", border="red") {
   
   graph.type <- match.arg(graph.type, c("matrix", "pvclust", "clusplot","all"))
   
-  if (class(GenMat)!="GenomicMatrix"){stop("the input is not a Genomatrix Object")}
+  if (class(GenMat)!="GenomicMatrix"){stop("the input is not a GenoMatrix Object")}
   
   if (!hasArg(GenMat)) {stop("A is missing")}
   
@@ -274,8 +282,54 @@ plotGenomeMatrix<-function(GenMat,
   if (graph.type=="pvclust" | graph.type=="all" ){
  
     plot(mat$GFit)
-    pvrect(mat$GFit, alpha=alpha, lwd=lwd ,pv =pv, border = "red")
+    pvrect(mat$GFit, alpha=alpha, lwd=lwd ,pv=pv, border = "red")
     
   }
   
 }
+
+
+createUniverse<-function(Alist){
+  uniList<-GRanges()
+  for(u in 1:length(Alist)){
+    uniList<-c(uniList,Alist[[1]])
+  }
+  return(uniList)
+}
+
+TOT<-c(RSL1,RSL2,RSL3,RSL4)
+a<-sample(length(TOT),4)
+b<-sample(length(TOT),7)
+
+mpt<-multiPermTest(Alist = TOT[a],
+                   Blist = TOT[b],
+                   genome = alienGenome,subEx = 0,max_pv=1)
+mat<-matMultiPermTest(mpt)
+
+mPT=multiOPT_circular
+    
+fit <- pvclust(mat, method.hclust="ward.D",method.dist="euclidean",
+               nboot = 1000)
+ind<-fit$hclust$order
+
+newNames<-colnames(mat)[ind]
+mat<-mat[,newNames]
+
+fit1 <- pvclust(t(mat), method.hclust="ward.D",method.dist="euclidean",
+               nboot = 1000)
+
+ind1<-fit1$hclust$order
+newNames1<-row(mat)[ind1]
+mat<-mat[newNames1,]
+
+nc<-pamk(mat)$nc 
+clus <- kmeans(mat, centers=nc)
+clus1 <- kmeans(t(mat), centers=nc)
+
+a<-clus$cluster*1000
+b<-clus1$cluster
+mat<-mat1<-vector()
+for(i in 1:length(b)){mat<-rbind(mat,a)}
+for(i in 1:length(b)){mat1<-cbind(mat1,b)}
+
+unique(as.vector(mat+mat1))

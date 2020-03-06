@@ -1,3 +1,11 @@
+library(regioneR)
+library(AnnotationHub)
+library(lattice)
+library(forcats)
+library(RColorBrewer) 
+#library(miceadds)
+library(corrplot)
+library(ggplot2)
 library(cluster)
 library(clustree)
 library(pvclust)
@@ -41,13 +49,13 @@ multiOPT<-multiOverlapPermTest(Alist=c(RSL1,RSL2,RSL3,RSL4),sampling = FALSE,ran
                                verbose=TRUE,genome=alienGenome,ntimes=100,
                                max_pv = 0.05,pv="p.value",subEx=0)
 
-multiOPT_circular<-multiOverlapPermTest(Alist=c(RSL1,RSL2,RSL3,RSL4),sampling = FALSE,ranFun = "circularRandomizeRegions",
+multiOPT_circular<-multiPermTest(Alist=c(RSL1,RSL2,RSL3,RSL4),sampling = FALSE,ranFun = "circularRandomizeRegions",
                                verbose=TRUE,genome=alienGenome,ntimes=100,
                                max_pv = 0.05,pv="p.value",subEx=0)
 
 
-mat_circular<-makeGenomicMatrix(multiOPT_circular)
-plotGenomeMatrix(mat_circular,graph.type = "clusplot",cl.lim=c(0,1))
+mat_circular<-makeGenomicMatrix(mPT=multiOPT_circular)
+plotGenomeMatrix(mat_circular,graph.type = "all",cl.lim=c(0,1))
 
 
 makeGenomicMatrix<-function(multiOPTL.obj,hc.method="ward.D",dist.method="euclidean",
