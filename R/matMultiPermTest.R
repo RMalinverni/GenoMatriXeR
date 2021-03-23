@@ -20,10 +20,10 @@
 #' @export matMultiPermTest
 #'
 matMultiPermTest<-function(mPT,zs.type='ranged_zscore',...){
-  A.obj<-mPT[-1]
+  A.obj<-mPT@multiOverlaps
   mat<-vector()
   for (i in 1:length(A.obj)){
-      mat<-cbind(mat,as.numeric(A.obj[[i]][,'ranged_zscore']))
+      mat<-cbind(mat,as.numeric(A.obj[[i]][,zs.type]))
   }
   colnames(mat)<-names(A.obj)
   rownames(mat)<-A.obj[[1]][,2]

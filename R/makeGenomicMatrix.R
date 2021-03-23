@@ -1,8 +1,9 @@
 makeGenomicMatrix<-function(mPT,clusterize=TRUE,hc.method="ward.D",dist.method="euclidean", transform=FALSE,
-         nboot=1000,zs.type='ranged_zscore', symm_matrix=TRUE,nc=NULL,...){
+         nboot=1000,zs.type='norm_zscore', symm_matrix=TRUE,nc=NULL,...){
   
-  if (class(mPT)=="multiOverlapPermTestList"){     
+  if (class(mPT)=="GenoMatriXeR"){     #add an error in other case
     mat<-matMultiPermTest(mPT,zs.type=zs.type)
+    print("class recognize")
   }
   
   if(transform==TRUE){
@@ -47,8 +48,9 @@ makeGenomicMatrix<-function(mPT,clusterize=TRUE,hc.method="ward.D",dist.method="
   clus <- kmeans(t(mat), centers=nc)
   
   mat1<-list(GMat=mat,GFit=fit,GFit2=fit2,GKmean=clus)
-  class(mat1)<-"GenomicMatrix"
+  mPT@matrix<-mat1
+  #class(mat1)<-"GenomicMatrix"
   
-  return(mat1)
+  return(mPT)
   
 }
