@@ -44,10 +44,10 @@
 
 
 multiOverlapPermTest<-function(Alist,Blist=NULL,
-                              sampling=FALSE,fraction=0.15, min_sampling=1000,
-                              ranFun="randomizeRegions", universe=NULL,
+                              sampling=FALSE,fraction=0.15, min_sampling=5000,
+                              ranFun="randomizeRegions", evFUN=NULL,universe=NULL,
                               adj_pv_method="BH", max_pv=0.05, pv="adj.pv", 
-                              verbose=FALSE,subEx=NA,mc.cores=2,...){
+                              verbose=FALSE,subEx=0,mc.cores=2,...){
   
   paramList<-list(Alist=deparse(substitute(Alist)),
               Blist=deparse(substitute(Blist)),
@@ -68,11 +68,13 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
     Alist<-subList(Alist,min_sampling=min_sampling,fraction=fraction)  
   }
   
+  if(is.null(evFUN)){evFUN<-numOverlaps}
+  
   for ( i in 1:length(Alist)){
     print(names(Alist[i]))
     A<-Alist[[i]]
     new.names<-names(Blist)
-    func.list <- createFunctionsList(FUN=numOverlaps, param.name="B", values=Blist)
+    func.list <- createFunctionsList(FUN=evFUN, param.name="B", values=Blist)
     ptm <- proc.time()
     
     if(ranFun=="randomizeRegions"){
@@ -82,6 +84,7 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
     if(ranFun=="circularRandomizeRegions"){
       pt <- permTest(A=A,evaluate.function=func.list,
                      randomize.function=circularRandomizeRegions,count.once=TRUE,mc.cores=mc.cores,...)
+      print(pt$numOverlaps$zscore)
     }
     if(ranFun=="resampleRegions"){
       if (is.null(universe)){

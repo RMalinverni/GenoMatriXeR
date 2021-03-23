@@ -98,7 +98,7 @@ testAssociations<-function(A,B,
 
 
 cleanNames<-function(listRS,cellName,
-                     vecEx=c("Uni","V0","Pcr","sc[0-9]","anb[0-9]","Iggrab","Forskln","Ucd")){
+                     vecEx=c("Uni","V0","Pcr","sc[0-9]","anb[0-9]","Iggrab","Forskln","Ucd",".narrowPeak.gz")){
   newNames<-gsub(paste0("^(.*)",cellName),"",names(listRS))
   for(i in vecEx){
     newNames<-gsub(paste0(i,"(.*)$"),"",newNames) 
@@ -140,7 +140,6 @@ subList<-function(Alist,min_sampling,fraction){
 }
 
 funRemove<-function(x,max_pv=0.05,pv="adj.pv",subEx=0,...){     # funzione per azzerare gli zScore che non passano in test 
-  
   
   
   if(pv=="adj.pv"){
@@ -210,27 +209,34 @@ createRandomRegionSets<-function(RegionSet,frac=0.5,seedName='',seed=123,nregion
 }
 
 
-makeGenomicMatrix<-function(mPT,hc.method="ward.D",dist.method="euclidean",
-                            nboot=1000,zs.type='ranged_zscore', symm_matrix=TRUE,...){
-  
+makeGenomicMatrix<-function(mPT,hc.method="ward.D",dist.method="euclidean", transform=FALSE,
+                            nboot=1000,zs.type='ranged_zscore', symm_matrix=TRUE,nc=NULL,...){
   
   # if (symm_matrix==TRUE & (ncol(mPT)!=nrow(mPT))){
   #   symm_matrix<-FALSE
   #   warning("impossible to create symmetrical matrix, number of matrix columns is different from number of rows")
   # }
-  if (class(mPT)=="multiPermTest"){     
-    mat<-matMultiPermTest(mPT,zs.type=zs.type)      
+  if (class(mPT)=="multiOverlapPermTestList"){     
+    mat<-matMultiPermTest(mPT,zs.type=zs.type)
+    if(transform==TRUE){
+      mat<-t(mat)
+      }
     fit <- pvclust(mat, method.hclust=hc.method, method.dist=dist.method,
-                   nboot = nboot,...)
+                   nboot = nboot)#,...)
     ind<-fit$hclust$order
+    
     if (symm_matrix==TRUE){
-      
       newNames<-colnames(mat)[ind]
       mat<-mat[newNames,newNames]
-      nc<-pamk(mat)$nc 
-      clus <- kmeans(mat, centers=nc)
-      
+    }  
+    
+    if (is.null(nc)){
+      set.seed(123)
+      nc<-pamk(t(mat),krange = 1:(ncol(mat)-1))$nc
     }
+    
+    clus <- kmeans(t(mat), centers=nc)
+    
     mat1<-list(GMat=mat,GFit=fit,GKmean=clus)
     class(mat1)<-"GenomicMatrix"
     return(mat1)
@@ -240,11 +246,11 @@ makeGenomicMatrix<-function(mPT,hc.method="ward.D",dist.method="euclidean",
 
 
 plotGenomeMatrix<-function(GenMat,
-                             graph.type, tl.col= "black",tl.srt=45, colMatrix="default",
-                             tl.cex = 0.5, pch.col ="black",cl.lim = c(-1,1),
-                             nc=NULL,
-                             color=TRUE, shade=TRUE, labels=2, lines=0,
-                             alpha=.95, lwd=2 , pv="au", border="red") {
+                          graph.type, tl.col= "black",tl.srt=45, colMatrix="default",
+                          tl.cex = 0.5, pch.col ="black",cl.lim = c(-1,1),
+                          nc=NULL,
+                          color=TRUE, shade=TRUE, labels=2, lines=0,
+                          alpha=.95, lwd=2 , pv="au", border="red") {
     
     graph.type <- match.arg(graph.type, c("matrix", "pvclust", "clusplot","all"))
     
@@ -256,16 +262,22 @@ plotGenomeMatrix<-function(GenMat,
                                       "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE", 
                                       "#4393C3", "#2166AC", "#053061"))
     
+    GM<-GenMat$GMat
+
+      
     if(colMatrix=="default") {colMatrix<-rev(paletteMatrix(50))}
     
     if (is.null(nc)){
       set.seed(123)
-      nc<-pamk(GenMat$GMat)$nc}
-    clus <- kmeans(GenMat$GMat, centers=nc)
+      nc<-pamk(t(GM),krange = 1:(ncol(GM)-1))$nc
+      #nc=
+      }
+    
+    clus <- kmeans(t(GM), centers=nc)
     
     if (graph.type=="matrix" | graph.type=="all" ){
-      
-      corrA<-corrplot(GenMat$GMat, tl.col = tl.col, 
+      ind<-GenMat$GFit$hclust$order
+      corrA<-corrplot(GM, tl.col = tl.col, 
                       tl.srt = tl.srt, is.corr = F,
                       col = colMatrix, tl.cex = tl.cex,
                       pch.col=pch.col, cl.lim =  cl.lim)
@@ -273,10 +285,19 @@ plotGenomeMatrix<-function(GenMat,
     }
     
     if (graph.type=="clusplot" | graph.type=="all" ){
-    
-      clusplot(GenMat$GMat, clus$cluster, color = color, shade = shade, 
-               labels = labels, lines = lines)
       
+      dimMat<-dim(GM)
+      if (dimMat[2]>=dimMat[1]){
+        clusMat<-t(GM)
+        colX<-which(colSums(clusMat)==0 & colMeans(clusMat)==0)
+        rowX<-which(rowSums(clusMat)==0 & rowMeans(clusMat)==0)
+        if (!is.integer0(colX)) { clusMat<-clusMat[ , -colX ] }
+        if (!is.integer0(rowX)) { clusMat<-clusMat[ -rowX , ] }
+        clusplot(pam(clusMat, 7), color = color, shade = shade, 
+               labels = labels, lines = lines)
+      }else{
+        warning("is impossible to calculate a clus plot using a matrix with more rows than column")
+      }
     }
     
     if (graph.type=="pvclust" | graph.type=="all" ){
@@ -292,44 +313,117 @@ plotGenomeMatrix<-function(GenMat,
 createUniverse<-function(Alist){
   uniList<-GRanges()
   for(u in 1:length(Alist)){
-    uniList<-c(uniList,Alist[[1]])
+    uniList<-c(uniList,Alist[[u]])
   }
   return(uniList)
 }
 
-TOT<-c(RSL1,RSL2,RSL3,RSL4)
-a<-sample(length(TOT),4)
-b<-sample(length(TOT),7)
+# TOT<-c(RSL1,RSL2,RSL3,RSL4)
+# a<-sample(length(TOT),4)
+# b<-sample(length(TOT),7)
+# 
+# mpt<-multiPermTest(Alist = TOT[a],
+#                    Blist = TOT[b],
+#                    genome = alienGenome,subEx = 0,max_pv=1)
+# mat<-matMultiPermTest(mpt)
+# 
+# mPT=multiOPT_circular
+#     
+# fit <- pvclust(mat, method.hclust="ward.D",method.dist="euclidean",
+#                nboot = 1000)
+# ind<-fit$hclust$order
+# 
+# newNames<-colnames(mat)[ind]
+# mat<-mat[,newNames]
+# 
+# fit1 <- pvclust(t(mat), method.hclust="ward.D",method.dist="euclidean",
+#                nboot = 1000)
+# 
+# ind1<-fit1$hclust$order
+# newNames1<-row(mat)[ind1]
+# mat<-mat[newNames1,]
+# 
+# nc<-pamk(mat)$nc 
+# clus <- kmeans(mat, centers=nc)
+# clus1 <- kmeans(t(mat), centers=nc)
+# 
+# a<-clus$cluster*1000
+# b<-clus1$cluster
+# mat<-mat1<-vector()
+# for(i in 1:length(b)){mat<-rbind(mat,a)}
+# for(i in 1:length(b)){mat1<-cbind(mat1,b)}
+# 
+# unique(as.vector(mat+mat1))
 
-mpt<-multiPermTest(Alist = TOT[a],
-                   Blist = TOT[b],
-                   genome = alienGenome,subEx = 0,max_pv=1)
-mat<-matMultiPermTest(mpt)
+is.integer0 <- function(x)
+{
+  is.integer(x) && length(x) == 0L
+}
 
-mPT=multiOPT_circular
+
+
+
+makeGenomicMatrix2<-function(mPT,clusterize=TRUE,hc.method="ward.D",dist.method="euclidean", transform=FALSE,
+                            nboot=1000,zs.type='ranged_zscore', symm_matrix=TRUE,nc=NULL,...){
+  
+ 
+  if (class(mPT)=="multiOverlapPermTestList"){     
+    mat<-matMultiPermTest(mPT,zs.type=zs.type)
+  }
     
-fit <- pvclust(mat, method.hclust="ward.D",method.dist="euclidean",
-               nboot = 1000)
-ind<-fit$hclust$order
+  if(transform==TRUE){
+      mat<-t(mat)
+  }
+  
+  if (symm_matrix==TRUE & (ncol(mat)!=nrow(mat))){
+     symm_matrix<-FALSE
+     warning("impossible to create symmetrical matrix, number of matrix columns is different from number of rows")
+   }
+  
+    
+  if (clusterize==TRUE){
+    fit <- pvclust(mat, method.hclust=hc.method, method.dist=dist.method,
+                    nboot = nboot)
+    ind<-fit$hclust$order
+    if (symm_matrix==TRUE){
+      
+      newNames<-colnames(mat)[ind] # non mi piace ordinare per nome
+      mat<-mat[newNames,newNames]
+      fit2=NULL
+      
+    }else{
+      
+      fit2 <- pvclust(t(mat), method.hclust=hc.method, method.dist=dist.method,
+              nboot = nboot)#,...)
+      ind2<-fit2$hclust$order
+      mat<-mat[ind2,ind]
+      
+    }  
+    
+    if (is.null(nc)){
+      set.seed(123)
+      nc<-pamk(t(mat),krange = 1:(ncol(mat)-1))$nc
+    }
+    }else{
+      fit=NULL
+      fit2=NULL
+    }
 
-newNames<-colnames(mat)[ind]
-mat<-mat[,newNames]
+    
+  clus <- kmeans(t(mat), centers=nc)
+    
+  mat1<-list(GMat=mat,GFit=fit,GFit2=fit2,GKmean=clus)
+  class(mat1)<-"GenomicMatrix"
+    
+  return(mat1)
+  
+}
 
-fit1 <- pvclust(t(mat), method.hclust="ward.D",method.dist="euclidean",
-               nboot = 1000)
 
-ind1<-fit1$hclust$order
-newNames1<-row(mat)[ind1]
-mat<-mat[newNames1,]
 
-nc<-pamk(mat)$nc 
-clus <- kmeans(mat, centers=nc)
-clus1 <- kmeans(t(mat), centers=nc)
 
-a<-clus$cluster*1000
-b<-clus1$cluster
-mat<-mat1<-vector()
-for(i in 1:length(b)){mat<-rbind(mat,a)}
-for(i in 1:length(b)){mat1<-cbind(mat1,b)}
 
-unique(as.vector(mat+mat1))
+
+
+
+

@@ -39,10 +39,9 @@
 
 listOverlapPermTest2<-function(Alist,Blist=NULL,
                               sampling=FALSE,fraction=0.15, min_sampling=1000,
-                              
                               ranFun="randomizeRegions", universe=NULL,
                               adj_pv_method="BH", max_pv=0.05, 
-                              verbose=FALSE,mc.cores=2,...){
+                              verbose=FALSE,mc.cores=2,ntimes=100,...){
   
   
   paramList<-list(Alist=deparse(substitute(Alist)),
@@ -60,12 +59,15 @@ listOverlapPermTest2<-function(Alist,Blist=NULL,
   if(is.null(Blist)){Blist<-Alist}
   list.tabs<-list()
   list.pt<-list()
+  
   if (sampling==TRUE){   # I am making only the subsampling of Alist check if it is clever or stupid
     Alist<-subList(Alist,min_sampling=min_sampling,fraction=fraction)  
   }
+
   
   for ( i in 1:length(Alist)){
     print(names(Alist[i]))
+    print(length(Alist[[i]]))
     A<-Alist[[i]]
     new.names<-names(Blist)
     func.list <- createFunctionsList(FUN=numOverlaps, param.name="B", values=Blist)
@@ -77,7 +79,7 @@ listOverlapPermTest2<-function(Alist,Blist=NULL,
     }
     if(ranFun=="circularRandomizeRegions"){
       pt <- permTest(A=A,evaluate.function=func.list,
-                     randomize.function=circularRandomizeRegions,count.once=TRUE,mc.cores=mc.cores)
+                     randomize.function=circularRandomizeRegions,count.once=TRUE,mc.cores=mc.cores,ntimes=ntimes)
     }
     if(ranFun=="resampleRegions"){
       if (is.null(universe)){

@@ -411,15 +411,15 @@ test<-multiOverlapPermTest(Alist = HM_K562_peaks[1:3],
                                      fraction = 0.15, verbose = TRUE)
 
 
-HM_HepG2_peaks<-cleanNames(HM_K562_peaks,cellName = "E118-",vecEx = c(".broad"))
-
+TF_HepG2_peaks<-cleanNames(TF_HepG2_peaks,cellName = "Hepg2")
 multiOPT_circular<-multiPermTest(Alist=HM_HepG2_peaks,sampling = TRUE,ranFun = "circularRandomizeRegions",
                                  verbose=TRUE,genome="hg19",ntimes=100,
                                  max_pv = 0.05,pv="p.value",subEx=0)
-
-multiOPT<-multiPermTest(Alist=HM_K562_peaks,sampling = TRUE,ranFun = "randomizeRegions",
-                                 verbose=TRUE,genome="hg19",ntimes=100,
+set.seed(123)
+ind<-sample(78,20)
+multiOPT<-multiPermTest(Alist=TF_HepG2_peaks[ind],sampling = TRUE,ranFun = "resampleRegions",
+                                 verbose=TRUE,genome="hg19",ntimes=50,
                                  max_pv = 0.05,pv="p.value",subEx=0)
 
 mat<-makeGenomicMatrix(mPT=multiOPT)
-plotGenomeMatrix(mat,graph.type = "all",cl.lim=c(-0.5,1),alpha=0.97,nc = 3)
+plotGenomeMatrix(mat,graph.type = "all",cl.lim=c(-0,1),alpha=0.95,nc = 3)

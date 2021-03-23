@@ -1,0 +1,90 @@
+#' Plot GenomeMatrix
+#'
+#' Create plots from a "GenomicMatrix" object
+#'
+#' @usage plotMatrix( (GenMat, graph.type = "all", main = "", tl.col = "black", tl.srt = 45, 
+#' colMatrix = "default", tl.cex = 0.5, pch.col = "black", cl.lim = c(-1,1),
+#' nc = NULL, color = TRUE, shade = TRUE, labels = 2, lines = 0,
+#' alpha = .95, lwd = 2 , pv = "au", border = "red",cex = 0.7,...))
+#'
+#' @param 
+#'
+#' @param 
+#' 
+#' @param 
+#' @param 
+#' @param ...  further arguments to be passed to other methods.
+#'
+#'
+#' @seealso ...
+#'
+#' @examples  ...
+#'
+#' #@references ...
+#' #@importFrom ...
+#' @export plotGenomeMatrix
+#'
+plotGenomeMatrix<-function(GenMat, graph.type="all",main="",
+                           tl.col= "black",tl.srt=45, colMatrix="default",
+                           tl.cex = 0.5, pch.col ="black",cl.lim = c(-1,1),
+                           nc=NULL, color=TRUE, shade=TRUE, labels=2, lines=0,
+                           alpha=.95, lwd=2 , pv="au", border="red",cex=0.7,...) {
+  
+  graph.type <- match.arg(graph.type, c("matrix", "pvclust", "clusplot","all"))
+  
+  if (class(GenMat)!="GenomicMatrix"){stop("the input is not a GenoMatrix Object")}
+  
+  if (!hasArg(GenMat)) {stop("A is missing")}
+  
+  paletteMatrix<-colorRampPalette(c("#67001F", "#B2182B", "#D6604D",  "#F4A582", 
+                                    "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE", 
+                                    "#4393C3", "#2166AC", "#053061"))
+  
+  GM<-GenMat$GMat
+  
+  if(colMatrix=="default") {colMatrix<-rev(paletteMatrix(50))}
+  
+  if (is.null(nc)){
+    
+    set.seed(123)
+    nc<-pamk(t(GM),krange = 1:(ncol(GM)-1))$nc
+    
+  }
+  
+  clus <- kmeans(t(GM), centers=nc)
+  
+  if (graph.type=="matrix" | graph.type=="all" ){
+    ind<-GenMat$GFit$hclust$order
+    
+    corrA<-corrplot(GM, tl.col = tl.col, 
+                    tl.srt = tl.srt, is.corr = F,
+                    col = colMatrix, tl.cex = tl.cex,
+                    pch.col=pch.col, cl.lim =  cl.lim)
+    
+  }
+  
+  if (graph.type=="clusplot" | graph.type=="all" ){
+    
+    dimMat<-dim(GM)
+    if (dimMat[2]>=dimMat[1]){
+      clusMat<-t(GM)
+      colX<-which(colSums(clusMat)==0 & colMeans(clusMat)==0)
+      rowX<-which(rowSums(clusMat)==0 & rowMeans(clusMat)==0)
+      if (!is.integer0(colX)) { clusMat<-clusMat[ , -colX ] }
+      if (!is.integer0(rowX)) { clusMat<-clusMat[ -rowX , ] }
+      
+      clusplot(pam(clusMat, nc), color = color, shade = shade,cex=cex,
+               labels = labels, lines = lines,main=paste0(main," method: PAM n.cluster = ",nc))
+    }else{
+      warning("is impossible to calculate a clus plot using a matrix with more rows than column")
+    }
+  }
+  
+  if (graph.type=="pvclust" | graph.type=="all" ){
+    
+    plot(GenMat$GFit, main = paste0(main," method: PAM n.cluster = ",nc))
+    pvrect(GenMat$GFit, alpha=alpha, lwd=lwd ,pv=pv, border = border)
+    
+  }
+  
+}

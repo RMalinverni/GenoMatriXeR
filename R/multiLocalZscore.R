@@ -41,7 +41,7 @@
 
 multiLocalZscore <- function(A, Blist=NULL,ranFun=randomizeRegions,sampling=FALSE,
                             fraction=0.15, universe=NULL, window=2000, step=100,
-                            mc.cores=2,adj_pv_method="BH",max_pv=0.05,...){
+                            mc.cores=2,adj_pv_method="BH",max_pv=0.05,genome="hg19",...){
   
   paramList<-list(A=deparse(substitute(A)),
                   Blist=deparse(substitute(Blist)),
@@ -71,17 +71,16 @@ multiLocalZscore <- function(A, Blist=NULL,ranFun=randomizeRegions,sampling=FALS
   
   function.list <- createFunctionsList(FUN = numOverlaps, param.name = "B", values = Blist)
   
-  
-  pt <- permTest(A = A,
+  pt <- permTest(A = granges(A),
                  evaluate.function = function.list,
-                 randomize.function = ranFun,
+                 randomize.function = ranFun,genome=genome,
                  count.once = TRUE,
-                 universe=universe, ...)
+                 universe=universe)
   
   
   lZs <- list()
   for(i in 1:length(pt)){
-    lZs[[i]] <- localZScore(A = A,  pt = pt[[i]], window = window, step = step)
+    lZs[[i]] <- localZScore(A = A,  pt = pt[[i]], count.once=TRUE,window = window, step = step)
     names(lZs)[i]<-names(pt[i])
   }
   
@@ -107,6 +106,8 @@ multiLocalZscore <- function(A, Blist=NULL,ranFun=randomizeRegions,sampling=FALS
                   sd_perm_test=unlist(sd_pemuted), 
                   n_overlaps=unlist(observed))
   tab$norm_zscore<-tab$z_score/sqrt(Nreg)
+  maxzscores<-(Nreg-tab$mean_perm_test)/tab$sd_perm_test
+  tab$ranged_zscore<-tab$z_score/maxzscores
   tab$adj.p_value<-round(p.adjust(tab$p_value,method=adj_pv_method),digits = 4)
   
   names(shiftedZs)<-names(Blist)
@@ -114,6 +115,7 @@ multiLocalZscore <- function(A, Blist=NULL,ranFun=randomizeRegions,sampling=FALS
   multiLZ.obj<-list(param=paramList,
                   nreg=Nreg,
                   resumeTab=tab,
+                  max_zscores=maxzscores,
                   shifts=shifts,
                   shifed_ZSs=shiftedZs
   )
@@ -121,6 +123,7 @@ multiLocalZscore <- function(A, Blist=NULL,ranFun=randomizeRegions,sampling=FALS
   class(multiLZ.obj)<-"multiLocalZscore"
   return (multiLZ.obj)
 }
+
 
 
 
