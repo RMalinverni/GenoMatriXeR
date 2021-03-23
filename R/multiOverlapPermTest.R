@@ -42,7 +42,6 @@
 #' @export multiOverlapPermTest
 
 
-
 multiOverlapPermTest<-function(Alist,Blist=NULL,
                               sampling=FALSE,fraction=0.15, min_sampling=5000,
                               ranFun="randomizeRegions", evFUN=NULL,universe=NULL,
@@ -79,12 +78,11 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
     
     if(ranFun=="randomizeRegions"){
       pt <- permTest( A=A, evaluate.function=func.list,  #aggiungere TryCatch
-                      randomize.function=randomizeRegions,count.once=TRUE,mc.cores=mc.cores,...)
+                      randomize.function=randomizeRegions,count.once=TRUE,mc.cores=mc.cores)
     }
     if(ranFun=="circularRandomizeRegions"){
       pt <- permTest(A=A,evaluate.function=func.list,
-                     randomize.function=circularRandomizeRegions,count.once=TRUE,mc.cores=mc.cores,...)
-      print(pt$numOverlaps$zscore)
+                     randomize.function=circularRandomizeRegions,count.once=TRUE,mc.cores=mc.cores)
     }
     if(ranFun=="resampleRegions"){
       if (is.null(universe)){
@@ -98,7 +96,7 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
       }
       pt <- permTest(A=A,evaluate.function=func.list,
                      randomize.function=resampleRegions,universe=universe,
-                     count.once=TRUE,mc.cores=mc.cores,...)
+                     count.once=TRUE,mc.cores=mc.cores)
 
     }
 
@@ -127,7 +125,7 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
     tab$norm_zscore<-tab$z_score/sqrt(length(A))
     tab$ranged_zscore<-rangedVector(tab$norm_zscore)
     tab$adj.p_value<-round(p.adjust(tab$p_value,method=adj_pv_method),digits = 4)
-    tab<-funRemove(tab,max_pv=max_pv,pv=pv,subEx=subEx)
+    tab<-funRemove(tab,max_pv=max_pv,pv=pv,subEx=subEx) #spostarla a make matrix idea di creare un ogjet alla Deseq2
     if (verbose==TRUE){print(tab)}  # remember to activate only if verbose.... 
     list.tabs[[i]]<-tab
     names(list.tabs)[i]<-names(Alist)[i]
@@ -138,6 +136,5 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
   
   return(list.tabs)
 }
-
 
 
