@@ -125,16 +125,16 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
     tab$norm_zscore<-tab$z_score/sqrt(length(A))
     tab$ranged_zscore<-rangedVector(tab$norm_zscore)
     tab$adj.p_value<-round(p.adjust(tab$p_value,method=adj_pv_method),digits = 4)
-    tab<-funRemove(tab,max_pv=max_pv,pv=pv,subEx=subEx) #spostarla a make matrix idea di creare un ogjet alla Deseq2
+    tab<-funRemove(tab,max_pv=max_pv,pv=pv,subEx=subEx) 
     if (verbose==TRUE){print(tab)}  # remember to activate only if verbose.... 
     list.tabs[[i]]<-tab
     names(list.tabs)[i]<-names(Alist)[i]
   }
-  list.tabs<-c(list(parameters=as.list(paramList)),list.tabs)
-  class(list.tabs) <- "multiOverlapPermTestList"
+  GMXR<-setClass("GenoMatriXeR",slots= c(parameters="list",multiOverlaps="list",matrix="list"))
+  GMXRobj<-GMXR(parameters=paramList,multiOverlaps=list.tabs ,matrix = list(NULL))
+
   
-  
-  return(list.tabs)
+  return(GMXRobj)
 }
 
 
