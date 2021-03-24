@@ -24,7 +24,7 @@
 #' #@importFrom ...
 #' @export plotGenomeMatrix
 #'
-plotGenomeMatrix<-function(GenMat, graph.type="all",main="",
+plotGenomeMatrix<-function(mPT, graph.type="all",main="",
                            tl.col= "black",tl.srt=45, colMatrix="default",
                            tl.cex = 0.5, pch.col ="black",cl.lim = c(-1,1),
                            nc=NULL, color=TRUE, shade=TRUE, labels=2, lines=0,
@@ -32,15 +32,17 @@ plotGenomeMatrix<-function(GenMat, graph.type="all",main="",
   
   graph.type <- match.arg(graph.type, c("matrix", "pvclust", "clusplot","all"))
   
-  if (class(GenMat)!="GenomicMatrix"){stop("the input is not a GenoMatrix Object")}
+  if (class(mPT)!="GenoMatriXeR"){stop("the input is not a GenoMatrix Object")}
   
-  if (!hasArg(GenMat)) {stop("A is missing")}
+  if (!hasArg(mPT)) {stop("A is missing")}
   
   paletteMatrix<-colorRampPalette(c("#67001F", "#B2182B", "#D6604D",  "#F4A582", 
                                     "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE", 
                                     "#4393C3", "#2166AC", "#053061"))
   
-  GM<-GenMat$GMat
+  if (!is.null(mPT@matrix)){ 
+    GM<-mPT@matrix$GMat 
+    }else{stop("the matrix slot in the GenoMatriXeR is NULL")}
   
   if(colMatrix=="default") {colMatrix<-rev(paletteMatrix(50))}
   
@@ -54,10 +56,10 @@ plotGenomeMatrix<-function(GenMat, graph.type="all",main="",
   clus <- kmeans(t(GM), centers=nc)
   
   if (graph.type=="matrix" | graph.type=="all" ){
-    ind<-GenMat$GFit$hclust$order
+    ind<-mPT@matrix$GFit$hclust$order
     
     corrA<-corrplot(GM, tl.col = tl.col, 
-                    tl.srt = tl.srt, is.corr = F,
+                    tl.srt = tl.srt, is.corr = FALSE,
                     col = colMatrix, tl.cex = tl.cex,
                     pch.col=pch.col, cl.lim =  cl.lim)
     
@@ -76,14 +78,14 @@ plotGenomeMatrix<-function(GenMat, graph.type="all",main="",
       clusplot(pam(clusMat, nc), color = color, shade = shade,cex=cex,
                labels = labels, lines = lines,main=paste0(main," method: PAM n.cluster = ",nc))
     }else{
-      warning("is impossible to calculate a clus plot using a matrix with more rows than column")
+      warning("is impossible to calculate a clusplot using a matrix with more rows than column")
     }
   }
   
   if (graph.type=="pvclust" | graph.type=="all" ){
     
-    plot(GenMat$GFit, main = paste0(main," method: PAM n.cluster = ",nc))
-    pvrect(GenMat$GFit, alpha=alpha, lwd=lwd ,pv=pv, border = border)
+    plot(mPT@matrix$GFit, main = paste0(main," method: PAM n.cluster = ",nc))
+    pvrect(mPT@matrix$GFit, alpha=alpha, lwd=lwd ,pv=pv, border = border)
     
   }
   
