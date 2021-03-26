@@ -60,7 +60,8 @@ plotGenomeMatrix<-function(mPT, graph.type="all",main="",
     
     corrA<-corrplot(GM, tl.col = tl.col, 
                     tl.srt = tl.srt, is.corr = FALSE,
-                    col = colMatrix, tl.cex = tl.cex,
+                    col = brewer.pal(9, "BuGn"), 
+                    tl.cex = tl.cex,
                     pch.col=pch.col, cl.lim =  cl.lim)
     
   }

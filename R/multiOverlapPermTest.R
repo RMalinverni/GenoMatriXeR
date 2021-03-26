@@ -114,16 +114,19 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
       
       vec<-data.frame(order.id=j,
                       name=new.names[j],
-                      n_regions=length(Blist[[j]]),
+                      n_regionA=length(Alist[[i]]),
+                      n_regionB=length(Blist[[j]]),
                       z_score=pt[[j]]$zscore,
                       p_value=pt[[j]]$pval,
                       n_overlaps=pt[[j]]$observed,
                       mean_perm_test=mean(pt[[j]]$permuted),
-                      sd__perm_test=sd(pt[[j]]$permuted))
+                      sd_perm_test=sd(pt[[j]]$permuted))
       tab<-rbind(vec,tab)
     }
-    tab$norm_zscore<-tab$z_score/sqrt(length(A))
-    tab$ranged_zscore<-rangedVector(tab$norm_zscore)
+    tab$norm_zscore<-tab$z_score/sqrt(tab$n_regionA)
+    #tab$ranged_zscore<-rangedVector(tab$norm_zscore)
+    max_zscore<-(tab$n_regionA-tab$mean_perm_test)/tab$sd_perm_test
+    tab$std_zscore<-tab$z_score/max_zscore
     tab$adj.p_value<-round(p.adjust(tab$p_value,method=adj_pv_method),digits = 4)
     tab<-funRemove(tab,max_pv=max_pv,pv=pv,subEx=subEx) 
     if (verbose==TRUE){print(tab)}  # remember to activate only if verbose.... 
