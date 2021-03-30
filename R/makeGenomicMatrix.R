@@ -3,6 +3,7 @@ makeGenomicMatrix<-function(mPT,clusterize=TRUE,hc.method="ward.D",dist.method="
   
   if (class(mPT)=="GenoMatriXeR"){     #add an error in other case
     mat<-matMultiPermTest(mPT,zs.type=zs.type)
+    mat_pv<-matMultiPermTest(mPT,zs.type="adj.p_value")
     print("class recognize")
   }
   
@@ -47,7 +48,7 @@ makeGenomicMatrix<-function(mPT,clusterize=TRUE,hc.method="ward.D",dist.method="
   
   clus <- kmeans(t(mat), centers=nc)
   
-  mat1<-list(GMat=mat,GFit=fit,GFit2=fit2,GKmean=clus)
+  mat1<-list(GMat=mat,GMat_pv=mat_pv,GFit=fit,GFit2=fit2,GKmean=clus)
   mPT@matrix<-mat1
   #class(mat1)<-"GenomicMatrix"
   

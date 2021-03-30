@@ -19,7 +19,7 @@
 #' #@importFrom ...
 #' @export matMultiPermTest
 #'
-matMultiPermTest<-function(mPT,zs.type='ranged_zscore',...){
+matMultiPermTest<-function(mPT,zs.type='std_zscore',...){
   A.obj<-mPT@multiOverlaps
   mat<-vector()
   for (i in 1:length(A.obj)){

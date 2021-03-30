@@ -26,7 +26,7 @@
 #'
 plotGenomeMatrix<-function(mPT, graph.type="all",main="",
                            tl.col= "black",tl.srt=45, colMatrix="default",
-                           tl.cex = 0.5, pch.col ="black",cl.lim = "auto",
+                           tl.cex = 0.5, pch.col ="black",cl.lim = c(-1,1),
                            nc=NULL, color=TRUE, shade=TRUE, labels=2, lines=0,
                            alpha=.95, lwd=2 , pv="au", border="red",cex=0.7,...) {
   
@@ -43,8 +43,6 @@ plotGenomeMatrix<-function(mPT, graph.type="all",main="",
   if (!is.null(mPT@matrix)){ 
     GM<-mPT@matrix$GMat 
     }else{stop("the matrix slot in the GenoMatriXeR is NULL")}
-  
-  if (cl.lim=="auto"){ cl.lim<-c(min(GM),max(GM)) }
   
   if(colMatrix=="default") {colMatrix<-rev(paletteMatrix(50))}
   

@@ -128,7 +128,7 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
     max_zscore<-(tab$n_regionA-tab$mean_perm_test)/tab$sd_perm_test
     tab$std_zscore<-tab$z_score/max_zscore
     tab$adj.p_value<-round(p.adjust(tab$p_value,method=adj_pv_method),digits = 4)
-    tab<-funRemove(tab,max_pv=max_pv,pv=pv,subEx=subEx) 
+    #tab<-funRemove(tab,max_pv=max_pv,pv=pv,subEx=subEx) 
     if (verbose==TRUE){print(tab)}  # remember to activate only if verbose.... 
     list.tabs[[i]]<-tab
     names(list.tabs)[i]<-names(Alist)[i]
