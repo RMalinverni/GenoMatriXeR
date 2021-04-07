@@ -28,7 +28,7 @@ plotGenomeMatrix_bis<-function(mPT, graph.type="all",main="",
                            tl.col= "black",tl.srt=45, colMatrix="default",
                            tl.cex = 0.5, pch.col ="black",cl.lim = c(-1,1),
                            nc=NULL, color=TRUE, shade=TRUE, labels=2, lines=0,
-                           alpha=.95, lwd=2 , pv="au", border="red",cex=0.7,...) {
+                           alpha=.95, lwd=2 , pv="au", border="red",cex=0.7,maxNZS=20,...) {
   
   graph.type <- match.arg(graph.type, c("matrix", "pvclust", "clusplot","all"))
   
@@ -42,7 +42,7 @@ plotGenomeMatrix_bis<-function(mPT, graph.type="all",main="",
     GM<-mPT@matrix$GMat 
     }else{stop("the matrix slot in the GenoMatriXeR is NULL")}
   
-  if(colMatrix=="default") {colMatrix<-rev(paletteMatrix(50))}
+  if(colMatrix=="default") {colMatrix<-rev(paletteMatrix)}
   
   if (is.null(nc)){
     
@@ -56,7 +56,7 @@ plotGenomeMatrix_bis<-function(mPT, graph.type="all",main="",
   if (graph.type=="matrix" | graph.type=="all" ){
     ind<-mPT@matrix$GFit$hclust$order
     
-    maxNZS<-4
+    maxNZS<-maxNZS
     GM2<-mPT@matrix$GMat
     mat_pv<-mPT@matrix$GMat_pv
     mat_pv<-mat_pv[rownames(GM2),colnames(GM2)]
@@ -65,13 +65,13 @@ plotGenomeMatrix_bis<-function(mPT, graph.type="all",main="",
     GMX<-GM2/abs(GM2)
     GMX[is.nan(GMX)]<-1
     GM2<-abs(GM2)
-    #GM2<-log1p(GM2)
+    GM2<-log1p(GM2)
     GM2<-GM2/max(GM2)
     GM<-GM2*GMX
     
     corrA<-corrplot(GM, tl.col = tl.col, 
-                    tl.srt = tl.srt, is.corr = TRUE,
-                    col = colMatrix, 
+                    tl.srt = tl.srt, is.corr =TRUE,
+                    col = rev(colMatrix), 
                     tl.cex = tl.cex,
                     pch.col=pch.col, cl.lim =  cl.lim)
     
