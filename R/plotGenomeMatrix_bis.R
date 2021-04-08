@@ -36,25 +36,10 @@ plotGenomeMatrix_bis<-function(mPT, graph.type="all",main="",
   
   if (!hasArg(mPT)) {stop("A is missing")}
   
-  paletteMatrix<-c(rev(brewer.pal(9, "PuBuGn")),brewer.pal(9, "YlOrRd"))
+  colMatrix<-rev(c(rev(brewer.pal(9, "PuBuGn")),brewer.pal(9, "YlOrRd")))
   
   if (!is.null(mPT@matrix)){ 
     GM<-mPT@matrix$GMat 
-    }else{stop("the matrix slot in the GenoMatriXeR is NULL")}
-  
-  if(colMatrix=="default") {colMatrix<-rev(paletteMatrix)}
-  
-  if (is.null(nc)){
-    
-    set.seed(123)
-    nc<-pamk(t(GM),krange = 1:(ncol(GM)-1))$nc
-    
-  }
-  
-  clus <- kmeans(t(GM), centers=nc)
-  
-  if (graph.type=="matrix" | graph.type=="all" ){
-    ind<-mPT@matrix$GFit$hclust$order
     
     maxNZS<-maxNZS
     GM2<-mPT@matrix$GMat
@@ -69,6 +54,35 @@ plotGenomeMatrix_bis<-function(mPT, graph.type="all",main="",
     GM2<-GM2/max(GM2)
     GM<-GM2*GMX
     
+    }else{stop("the matrix slot in the GenoMatriXeR is NULL")}
+  
+  #if(colMatrix=="default") {colMatrix<-rev(paletteMatrix)}
+  
+  if (is.null(nc)){
+    
+    set.seed(123)
+    nc<-pamk(t(GM),krange = 1:(ncol(GM)-1))$nc
+    
+  }
+  
+  clus <- kmeans(t(GM), centers=nc)
+  
+  if (graph.type=="matrix" | graph.type=="all" ){
+    ind<-mPT@matrix$GFit$hclust$order
+    
+    # maxNZS<-maxNZS
+    # GM2<-mPT@matrix$GMat
+    # mat_pv<-mPT@matrix$GMat_pv
+    # mat_pv<-mat_pv[rownames(GM2),colnames(GM2)]
+    # GM2[mat_pv>0.05]<-0
+    # GM2[GM2>=maxNZS]<-maxNZS
+    # GMX<-GM2/abs(GM2)
+    # GMX[is.nan(GMX)]<-1
+    # GM2<-abs(GM2)
+    # GM2<-log1p(GM2)
+    # GM2<-GM2/max(GM2)
+    # GM<-GM2*GMX
+    
     corrA<-corrplot(GM, tl.col = tl.col, 
                     tl.srt = tl.srt, is.corr =TRUE,
                     col = rev(colMatrix), 
@@ -82,10 +96,10 @@ plotGenomeMatrix_bis<-function(mPT, graph.type="all",main="",
     dimMat<-dim(GM)
     if (dimMat[2]>=dimMat[1]){
       clusMat<-t(GM)
-      colX<-which(colSums(clusMat)==0 & colMeans(clusMat)==0)
-      rowX<-which(rowSums(clusMat)==0 & rowMeans(clusMat)==0)
-      if (!is.integer0(colX)) { clusMat<-clusMat[ , -colX ] }
-      if (!is.integer0(rowX)) { clusMat<-clusMat[ -rowX , ] }
+      #colX<-which(colSums(clusMat)==0 & colMeans(clusMat)==0)
+      #rowX<-which(rowSums(clusMat)==0 & rowMeans(clusMat)==0)
+      #if (!is.integer0(colX)) { clusMat<-clusMat[ , -colX ] }
+      #if (!is.integer0(rowX)) { clusMat<-clusMat[ -rowX , ] }
       
       clusplot(pam(clusMat, nc), color = color, shade = shade,cex=cex,
                labels = labels, lines = lines,main=paste0(main," method: PAM n.cluster = ",nc))
