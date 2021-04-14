@@ -11,6 +11,9 @@ makeGenomicMatrix<-function(mPT,clusterize=TRUE,hc.method="ward.D",dist.method="
     mat<-t(mat)
   }
   
+  mat[is.na(mat)]<-0
+  mat[!is.finite(mat)]<-0
+  
   if (symm_matrix==TRUE & (ncol(mat)!=nrow(mat))){
     symm_matrix<-FALSE
     warning("impossible to create symmetrical matrix, number of matrix columns is different from number of rows")
@@ -38,7 +41,7 @@ makeGenomicMatrix<-function(mPT,clusterize=TRUE,hc.method="ward.D",dist.method="
     
     if (is.null(nc)){
       set.seed(123)
-      nc<-pamk(t(mat),krange = 1:(ncol(mat)-1))$nc
+      nc<-pamk(t(mat),krange = 2:(ncol(mat)-1),scaling = TRUE)$nc
     }
   }else{
     fit=NULL

@@ -46,7 +46,7 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
                               sampling=FALSE,fraction=0.15, min_sampling=5000,
                               ranFun="randomizeRegions", evFUN=NULL,universe=NULL,
                               adj_pv_method="BH", max_pv=0.05, pv="adj.pv", 
-                              verbose=FALSE,subEx=0,mc.cores=2,...){
+                              verbose=FALSE,subEx=0,mc.cores=2,genome="hg19",...){
   
   paramList<-list(Alist=deparse(substitute(Alist)),
               Blist=deparse(substitute(Blist)),
@@ -78,11 +78,11 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
     
     if(ranFun=="randomizeRegions"){
       pt <- permTest( A=A, evaluate.function=func.list,  #aggiungere TryCatch
-                      randomize.function=randomizeRegions,count.once=TRUE,mc.cores=mc.cores)
+                      randomize.function=randomizeRegions,count.once=TRUE,mc.cores=mc.cores,genome=genome)
     }
     if(ranFun=="circularRandomizeRegions"){
       pt <- permTest(A=A,evaluate.function=func.list,
-                     randomize.function=circularRandomizeRegions,count.once=TRUE,mc.cores=mc.cores)
+                     randomize.function=circularRandomizeRegions,count.once=TRUE,mc.cores=mc.cores,genome=genome)
     }
     if(ranFun=="resampleRegions"){
       if (is.null(universe)){
