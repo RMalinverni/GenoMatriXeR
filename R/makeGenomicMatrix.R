@@ -9,6 +9,7 @@ makeGenomicMatrix<-function(mPT,clusterize=TRUE,hc.method="ward.D",dist.method="
   
   if(transform==TRUE){
     mat<-t(mat)
+    mat_pv<-t(mat_pv)
   }
   
   mat[is.na(mat)]<-0
