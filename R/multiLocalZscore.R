@@ -41,7 +41,7 @@
 
 multiLocalZscore <- function(A, Blist=NULL,ranFun=randomizeRegions,sampling=FALSE,
                             fraction=0.15, universe=NULL, window=2000, step=100,
-                            mc.cores=2,adj_pv_method="BH",max_pv=0.05,genome="hg19",...){
+                            mc.cores=2,adj_pv_method="BH",max_pv=0.05,genome="hg19",ntimes=100,...){
   
   paramList<-list(A=deparse(substitute(A)),
                   Blist=deparse(substitute(Blist)),
@@ -74,7 +74,7 @@ multiLocalZscore <- function(A, Blist=NULL,ranFun=randomizeRegions,sampling=FALS
   pt <- permTest(A = granges(A),
                  evaluate.function = function.list,
                  randomize.function = ranFun,genome=genome,
-                 count.once = TRUE,
+                 count.once = TRUE,ntimes = ntimes,
                  universe=universe)
   
   

@@ -14,7 +14,12 @@ makeLZMatrix<-function(mlZA,normalize=TRUE,matLim=NULL){
       vec<-rbind(vec,mlZA$shifed_ZSs[[i]])
     } 
   }
+
   vec<-vec[-1,]
+  
+  if (is.vector(vec)){
+    vec<-t(as.data.frame(vec))
+  }
   rownames(vec)<-names(mlZA$shifed_ZSs)
   colnames(vec)<-mlZA$shifts
   # I need to add a matLim integration
