@@ -4,7 +4,7 @@
 #' set the resut will be store in a multiOvelapPermTest class
 #'
 #' @usage multiOvelapPermTest(Alist, Blist, sampling=FALSE, fraction=0.15, min_sampling=1000,
-#'                            ranFun="randomizeRegions",universe=NULL, adj_pv_method="BH", 
+#'                            ranFUN="randomizeRegions",universe=NULL, adj_pv_method="BH", 
 #'                            max_pv=0.05,verbose=FALSE,mc.cores=2 ...)
 #' 
 #' 
@@ -18,14 +18,16 @@
 #' used to perform the test (default = 0.15)
 #' @param min_sampling numeric, minimum number of regions accepted after the sampling, if the number of the sampled 
 #' regions is less than min_sampling will be used min_sampling value as number of regions
-#' @param ranFun c("randomizeRegions","circularRandomizeRegions",
-#' "resampleRegions"), choose the randomization strategy used for the test see  \code{\link{regioneR}}
-#' @param universe (default = NULL) using only when resamplinRegions function is
-#' selected
+#' @param ranFUN (default = "randomizeRegions") choose the randomization strategy used for the test see  \code{\link{regioneR}}
+#' @param evFUN  (default = "numOverlaps) choose the evaluation strategy used for the test see  \code{\link{regioneR}}
+#' @param universe (default = NULL) used only when \code{\link{resampleRegions}} function is selected
 #' @param adj_pv_method Charachter, the method used for the calculation of the adjusted p-value, 
 #' to choose between the options of \code{\link{p.adjust}}. (default = "BH")
-#' @param  max_pv Numeric, the z-scores associate a p-values higher of this parameter will be transform in 0. (default =0.05)
-#' @param  verbose Boolean, if verbose
+#' @param max_pv Numeric, the z-scores associate a p-values higher of this parameter will be transform in 0. (default =0.05)
+#' @param pv Charachter, (default = "adj.pv") value choose to set the cutoff
+#' @param subEx Numeric, (default = 0) substitute this value to a z-score when the pvalue is higher than max_pv
+#' @param genome Charachter, (defalut = "hg19") genome used to compute the randomization
+#' @param verbose Boolean, if verbose
 #' @param ...  further arguments to be passed to other methods. 
 #' 
 #' @details  the permutation test core used in this function permit to change
@@ -34,12 +36,13 @@
 #' custom function), but use only an \code{"evaluation.function"}
 #' \code{\link{numOverlaps}}
 #' @return ...
-#'
+#' 
 #' @seealso  \code{\link{permTest}}
 #'
 #' @examples  ...
 #'
 #' @export multiOverlapPermTest
+
 
 
 multiOverlapPermTest<-function(Alist, Blist = NULL, sampling = FALSE, fraction = 0.15, min_sampling = 5000,
