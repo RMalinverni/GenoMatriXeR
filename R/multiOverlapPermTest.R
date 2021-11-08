@@ -42,49 +42,52 @@
 #' @export multiOverlapPermTest
 
 
-multiOverlapPermTest<-function(Alist,Blist=NULL,
-                              sampling=FALSE,fraction=0.15, min_sampling=5000,
-                              ranFun="randomizeRegions", evFUN=NULL,universe=NULL,
-                              adj_pv_method="BH", max_pv=0.05, pv="adj.pv", 
-                              verbose=FALSE,subEx=0,mc.cores=2,genome="hg19",...){
+multiOverlapPermTest<-function(Alist, Blist = NULL, sampling = FALSE, fraction = 0.15, min_sampling = 5000,
+                              ranFUN = "randomizeRegions", evFUN = "numOverlaps", universe = NULL, ntimes=100,
+                              adj_pv_method = "BH", max_pv = 0.05, pv = "adj.pv", subEx=0, 
+                              genome = "hg19", verbose = FALSE, ...){
+  
+  ranFUN<-as.character(substitute(ranFUN)) 
   
   paramList<-list(Alist=deparse(substitute(Alist)),
               Blist=deparse(substitute(Blist)),
               sampling=deparse(substitute(sampling)),
               fraction=deparse(substitute(fraction)),
               min_sampling=deparse(substitute(fraction)),
-              ranFun=ranFun,
+              ranFUN=ranFUN,
               universe=deparse(substitute(universe)),
               adj_pv_method=adj_pv_method,
               max_pv=deparse(substitute(max_pv)),
-              mc.cores=mc.cores
+              ntimes=ntimes,
+              nc=NULL,
+              matOrder=NULL
               )
  
-  if(is.null(Blist)){Blist<-Alist}
-  list.tabs<-list()
-  list.pt<-list()
-  if (sampling==TRUE){  
-    Alist<-subList(Alist,min_sampling=min_sampling,fraction=fraction)  
+  if( is.null ( Blist ) ){ Blist <- Alist }
+  list.tabs <- list()
+  list.pt <- list()
+  if ( sampling == TRUE ){  
+    Alist <- subList (Alist, min_sampling = min_sampling, fraction = fraction)  
   }
   
-  if(is.null(evFUN)){evFUN<-numOverlaps}
+  
+  
+  
+  if (ranFUN=="resampleRegions") {FUN<-resampleRegions}
+  if (ranFUN=="randomizeRegions") {FUN<-randomizeRegions}
+  if (ranFUN=="circularRandomizeRegions") {FUN<-circularRandomizeRegions}
+  
+  print(ranFUN)
   
   for ( i in 1:length(Alist)){
+    
     print(names(Alist[i]))
     A<-Alist[[i]]
     new.names<-names(Blist)
     func.list <- createFunctionsList(FUN=evFUN, param.name="B", values=Blist)
     ptm <- proc.time()
     
-    if(ranFun=="randomizeRegions"){
-      pt <- permTest( A=A, evaluate.function=func.list,  #aggiungere TryCatch
-                      randomize.function=randomizeRegions,count.once=TRUE,mc.cores=mc.cores,genome=genome)
-    }
-    if(ranFun=="circularRandomizeRegions"){
-      pt <- permTest(A=A,evaluate.function=func.list,
-                     randomize.function=circularRandomizeRegions,count.once=TRUE,mc.cores=mc.cores,genome=genome)
-    }
-    if(ranFun=="resampleRegions"){
+    if(ranFUN=="resampleRegions"){
       if (is.null(universe)){
         warning("resampleRegions function need that 'universe' is not NULL, universe was created using all the regions present in Alist")
         uniList<-data.frame()
@@ -94,12 +97,12 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
         }
         universe<-uniList
       }
-      pt <- permTest(A=A,evaluate.function=func.list,
-                     randomize.function=resampleRegions,universe=universe,
-                     count.once=TRUE,mc.cores=mc.cores)
-
     }
-
+    
+    pt <- permTest( A=A, evaluate.function=func.list, ntimes=ntimes, #aggiungere TryCatch
+                    randomize.function=FUN,universe=universe,count.once=TRUE, genome=genome, ...)
+    
+  
     time<-proc.time() - ptm
     time<-time[3]/60
     if (verbose==TRUE){print(paste0(" run in ",time,"  minute"))}
@@ -124,20 +127,17 @@ multiOverlapPermTest<-function(Alist,Blist=NULL,
       tab<-rbind(vec,tab)
     }
     tab$norm_zscore<-tab$z_score/sqrt(tab$n_regionA)
-    #tab$ranged_zscore<-rangedVector(tab$norm_zscore)
     max_zscore<-(tab$n_regionA-tab$mean_perm_test)/tab$sd_perm_test
     tab$std_zscore<-tab$z_score/max_zscore
     tab$adj.p_value<-round(p.adjust(tab$p_value,method=adj_pv_method),digits = 4)
-    #tab<-funRemove(tab,max_pv=max_pv,pv=pv,subEx=subEx) 
+    
+    
     if (verbose==TRUE){print(tab)}  # remember to activate only if verbose.... 
     list.tabs[[i]]<-tab
     names(list.tabs)[i]<-names(Alist)[i]
   }
-  GMXR<-setClass("GenoMatriXeR",slots= c(parameters="list",multiOverlaps="list",matrix="list"))
-  GMXRobj<-GMXR(parameters=paramList,multiOverlaps=list.tabs ,matrix = list(NULL))
+  GMXRobj<-gMXR(parameters=paramList,multiOverlaps=list.tabs ,matrix = list(NULL))
 
   
   return(GMXRobj)
 }
-
-
